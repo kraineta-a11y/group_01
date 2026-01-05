@@ -14,7 +14,7 @@ if not os.path.exists(session_dir):
 
 application.config.update(
     SESSION_TYPE="filesystem",
-    SESSION_FILE_DIR=session_dir,
+    SESSION_FILE_DIR="home/Netarosh/projects/group_01/flask_session_data",
     SESSION_PERMANENT=True,
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),
     SESSION_REFRESH_EACH_REQUEST=True,
@@ -27,10 +27,10 @@ Session(application)
 # --- Database connection ---
 def get_db_connection():
     return mdb.connect(
-        host='localhost',
+        host='Netarosh.mysql.pythonanywhere-services.com',
         user='root',
         password='root',
-        database='flytau_db'
+        database='Netarosh$FLYTAU'
     )
 
 def get_user_role():
@@ -217,6 +217,3 @@ def admin():
             msg = "Database reset. Phase is idle now."
     return render_template("admin.html", phase=phase, msg=msg)
 
-
-if __name__ == "__main__":
-    application.run(debug=True)
