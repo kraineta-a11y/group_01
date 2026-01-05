@@ -27,8 +27,8 @@ Session(application)
 def get_db_connection():
     return mdb.connect(
         host='Netarosh.mysql.pythonanywhere-services.com',
-        user='root',
-        password='root',
+        user='Netarosh',
+        password='group01root',
         database='Netarosh$FLYTAU'
     )
 
