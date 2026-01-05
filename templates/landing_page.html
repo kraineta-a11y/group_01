@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FLYTAU Landing</title>
+</head>
+<body>
+    <h1>Welcome to FLYTAU</h1>
+    {% if role == 'guest' %}
+        <p>You are browsing as a guest. <a href="{{ url_for('login') }}">Login</a> or <a href="{{ url_for('register') }}">Register</a></p>
+    {% else %}
+        <p>You are logged in as a {{ role }}.</p>
+    {% endif %}
+
+    <!-- Flight search form placeholder -->
+    <form action="{{ url_for('flights') }}" method="get">
+        <label>Date: <input type="date" name="date"></label>
+        <label>Origin: <input type="text" name="origin"></label>
+        <label>Destination: <input type="text" name="destination"></label>
+        <button type="submit">Search Flights</button>
+    </form>
+</body>
+</html>
