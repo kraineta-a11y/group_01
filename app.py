@@ -4,6 +4,8 @@ from datetime import timedelta
 import random
 import os
 import mysql.connector as mdb
+from flask import url_for
+
 
 application = Flask(__name__)
 
@@ -13,7 +15,7 @@ if not os.path.exists(session_dir):
 
 application.config.update(
     SESSION_TYPE="filesystem",
-    SESSION_FILE_DIR="home/Netarosh/projects/group_01/flask_session_data",
+    SESSION_FILE_DIR=session_dir,
     SESSION_PERMANENT=True,
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),
     SESSION_REFRESH_EACH_REQUEST=True,
@@ -36,14 +38,14 @@ def get_user_role():
     """Determine role based on session info (email or ID)."""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    if "manager_id" in session:
-        cursor.execute("SELECT * FROM Manager WHERE Employee_id = %s", (session["manager_id"],))
+    if "manager_employee_id" in session:
+        cursor.execute("SELECT * FROM Manager WHERE Employee_id = %s", (session["manager_employee_id"],))
         if cursor.fetchone():
             cursor.close()
             conn.close()
             return 'manager'
-    if "client_id" in session:
-        cursor.execute("SELECT * FROM Registered_client WHERE Email = %s", (session["client_id"],))
+    if "client_email" in session:
+        cursor.execute("SELECT * FROM Registered_client WHERE Email = %s", (session["client_email"],))
         if cursor.fetchone():
             cursor.close()
             conn.close()
@@ -72,26 +74,26 @@ def admin_dashboard():
 @application.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
+        identifier = request.form['identifier']
         password = request.form['password']
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         # Check in managers table
-        cursor.execute("SELECT * FROM Manager WHERE Employee_id = %s AND Manager_password = %s", (email, password))
+        cursor.execute("SELECT * FROM Manager WHERE Employee_id = %s AND Manager_password = %s", (identifier, password))
         manager = cursor.fetchone()
         if manager:
-            session['manager_id'] = manager['id']
+            session['manager_employee_id'] = manager['Employee_id']
             cursor.close()
             conn.close()
             return redirect(url_for('admin_dashboard'))
 
         # Check in registered table
-        cursor.execute("SELECT * FROM Registered_client WHERE Email = %s AND Registered_password = %s", (email, password))
+        cursor.execute("SELECT * FROM Registered_client WHERE Email = %s AND Registered_password = %s", (identifier, password))
         client = cursor.fetchone()
         if client:
-            session['client_id'] = client['id']
+            session['client_email'] = client['Email']
             cursor.close()
             conn.close()
             return redirect(url_for('landing_page'))
@@ -106,6 +108,38 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('landing_page'))
+
+@application.route('/search', methods=['GET'])
+def search():
+    origin = request.args.get('origin')
+    destination = request.args.get('destination')
+    date = request.args.get('date')
+
+    #Sanity checks
+    if not origin or not destination or not date:
+        return redirect(url_for('landing_page'))
+    # Implement search logic here
+    query = """
+                SELECT * 
+                FROM 
+                    Flight as f
+                JOIN
+                    Flying Route as fr ON f.Route_id = fr.Route_id
+                WHERE 
+                    fr.Origin_airport = %s AND 
+                    fr.Destination_airport = %s AND 
+                    f.Departure_date = %s AND
+                    f.Flight_status = 'ACTIVE'
+                ORDER BY Departure_time
+            """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(query, (origin, destination, date))
+    flights = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('landing_page.html', role=get_user_role(), flights=flights)
 
 @application.errorhandler(404)
 def invalid_route(e):

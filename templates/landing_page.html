@@ -12,10 +12,26 @@
     {% endif %}
 
     <!-- Flight search form placeholder -->
-        <label>Date: <input type="date" name="date"></label>
-        <label>Origin: <input type="text" name="origin"></label>
-        <label>Destination: <input type="text" name="destination"></label>
-        <button type="submit">Search Flights</button>
-    </form>
+    <form method="get" action="/search">
+  <input type="text" name="origin" placeholder="From" required>
+  <input type="text" name="destination" placeholder="To" required>
+  <input type="date" name="date" required>
+  <button type="submit">Search flights</button>
+</form>
+
+{% if flights %}
+  <h2>Results</h2>
+  <ul>
+    {% for flight in flights %}
+      <li>
+        {{ flight.Origin }} → {{ flight.Destination }}
+        | {{ flight.Departure_date }}
+        | {{ flight.Departure_time }}
+        | ₪{{ flight.Price }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
 </body>
 </html>
