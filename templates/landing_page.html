@@ -12,12 +12,12 @@
     {% endif %}
 
     <!-- Flight search form placeholder -->
-    <form method="get" action="/search">
+  <form method="get" action="{{ url_for('search') }}">
   <input type="text" name="origin" placeholder="From" required>
   <input type="text" name="destination" placeholder="To" required>
   <input type="date" name="date" required>
   <button type="submit">Search flights</button>
-</form>
+  </form>
 
 {% if flights is defined %}
   {% if flights %}
