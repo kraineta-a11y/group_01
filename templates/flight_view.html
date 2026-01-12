@@ -5,11 +5,11 @@
 </head>
 <body>
     <h1>Flight Details</h1>
-    <strong>Flight Number </strong> {{ flights.flight_number }}
+    <strong>Flight Number </strong> {{ flights.Flight_number }}
     <strong>Departing from: </strong> {{flights.Origin_airport}}
     <p>Departing time: </p> {{flights.Departure_date}} {{flights.Departure_time}}
     <strong>Landing at: </strong> {{flights.Destination_airport}}
-    <p>Landing time: </p> {{flights.time}} 
+    <p>Landing time: </p> {{flights.Duration_Of_Flight}} 
     <strong>Price: </strong> {{flights.Price}}
     <p>Not what you were looking for? <a href="{{ url_for('landing_page') }}">Back to home page</a></p>
     {% if role == 'client' %}
