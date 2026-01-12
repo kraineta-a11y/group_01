@@ -143,8 +143,7 @@ def search():
     return render_template('landing_page.html', role=get_user_role(), flights=flights)
 
 @application.route('/flight_view/<int:flight_number>', methods=['GET','POST'])
-def flight_view():
-    flight_number = request.args.get('flight_number')
+def flight_view(flight_number):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     query = """
