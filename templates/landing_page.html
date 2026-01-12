@@ -19,20 +19,22 @@
   <button type="submit">Search flights</button>
 </form>
 
-{% if flights %}
-  <h2>Results</h2>
-  <ul>
-    {% for flight in flights %}
-      <li>
-        {{ flight.Origin_airport }} → {{ flight.Destination_airport }}
-        | {{ flight.Departure_date }}
-        | {{ flight.Departure_time }}
-        | ₪{{ flight.Price }}
-      </li>
-    {% endfor %}
-  </ul>
-{% else %}
-  <p>No flights found.</p>
+{% if flights is defined %}
+  {% if flights %}
+    <h2>Results</h2>
+    <ul>
+      {% for flight in flights %}
+        <li>
+          {{ flight.Origin_airport }} → {{ flight.Destination_airport }}
+          | {{ flight.Departure_date }}
+          | {{ flight.Departure_time }}
+          | ₪{{ flight.Price }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No flights found.</p>
+  {% endif %}
 {% endif %}
 
 </body>

@@ -121,7 +121,6 @@ def search():
     # Implementing search logic
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("use Netarosh$FLYTAU;")
     query = """
                 SELECT * 
                 FROM 
@@ -133,7 +132,7 @@ def search():
                     fr.Destination_airport = %s AND 
                     f.Departure_date = %s AND
                     f.Flight_status = 'ACTIVE'
-                ORDER BY Departure_time
+                ORDER BY f.Departure_time
             """
     
     cursor.execute(query, (origin, destination, date))
