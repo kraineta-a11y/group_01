@@ -24,13 +24,15 @@
   <ul>
     {% for flight in flights %}
       <li>
-        {{ flight.Origin }} → {{ flight.Destination }}
+        {{ flight.Origin_airport }} → {{ flight.Destination_airport }}
         | {{ flight.Departure_date }}
         | {{ flight.Departure_time }}
         | ₪{{ flight.Price }}
       </li>
     {% endfor %}
   </ul>
+{% else %}
+  <p>No flights found.</p>
 {% endif %}
 
 </body>
