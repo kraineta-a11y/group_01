@@ -24,12 +24,14 @@
     <h2>Results</h2>
     <ul>
       {% for flight in flights %}
+      <a href="{{ url_for('flight_view', flight_id=flight.flight_id) }}"
         <li>
           {{ flight.Origin_airport }} → {{ flight.Destination_airport }}
           | {{ flight.Departure_date }}
           | {{ flight.Departure_time }}
           | ₪{{ flight.Price }}
         </li>
+      </a>
       {% endfor %}
     </ul>
   {% else %}
