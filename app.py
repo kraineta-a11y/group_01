@@ -142,7 +142,7 @@ def search():
 
     return render_template('landing_page.html', role=get_user_role(), flights=flights)
 
-@application.route('/flight/<int:flight_id>', methods=['GET','POST'])
+@application.route('/flight_view/<int:flight_id>', methods=['GET','POST'])
 def flight_view():
     flight_id = request.args.get('flight_id')
     conn = get_db_connection()
