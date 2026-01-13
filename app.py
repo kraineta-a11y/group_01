@@ -282,7 +282,7 @@ def admin_create_flight():
             cursor.close()
             conn.close()
 
-        return redirect(url_for('assign_crew', flight_number=flight_number))
+        return redirect(url_for('/admin/assign_crew', flight_number=flight_number))
     cursor.close()
     conn.close()
 
