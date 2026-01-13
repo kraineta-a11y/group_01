@@ -257,30 +257,24 @@ def admin_create_flight():
             return "No such route exists", 400
 
         route_id = route['Route_id']
-        try:
-            # Create flight
-            cursor.execute("""
-                INSERT INTO Flight (Route_id, Departure_date, Departure_time, Flight_status, Route_id)
-                VALUES (%s, %s, %s, 'ACTIVE', %s)
-            """, (route_id, departure_date, departure_time, route_id))
+    
+        # Create flight
+        cursor.execute("""
+            INSERT INTO Flight (Route_id, Departure_date, Departure_time, Flight_status)
+            VALUES (%s, %s, %s, 'ACTIVE')
+        """, (route_id, departure_date, departure_time))
 
-            flight_number = cursor.lastrowid
+        flight_number = cursor.lastrowid
 
-            # Set pricing
-            cursor.execute("""
-                INSERT INTO Flight_pricing (Flight_number, Price, Manager_employee_id)
-                VALUES (%s, %s, %s)
-            """, (flight_number, price, manager_id))
+        # Set pricing
+        cursor.execute("""
+            INSERT INTO Flight_pricing (Flight_number, Price, Manager_employee_id)
+            VALUES (%s, %s, %s)
+        """, (flight_number, price, manager_id))
 
-            conn.commit()
-
-        except Exception as e:
-            conn.rollback()
-            raise e
-
-        finally:
-            cursor.close()
-            conn.close()
+        conn.commit()
+        cursor.close()
+        conn.close()
 
         return redirect(url_for('/admin/assign_crew', flight_number=flight_number))
     cursor.close()
@@ -297,7 +291,6 @@ def assign_crew():
     if get_user_role() != 'manager':
         return "Forbidden", 403
 
-    flight_number = request.args.get('flight_number')
     if request.method == 'POST':
         flight_number = request.form.get('flight_number')
         pilots = request.form.getlist('pilots')
@@ -325,6 +318,7 @@ def assign_crew():
         return redirect(url_for('admin_dashboard'))
 
     # GET — show available staff
+    flight_number = request.args.get('flight_number')
     available_pilots = get_available_pilots(flight_number, long_haul_required=False)
     available_stewards = get_available_stewards(flight_number, long_haul_required=False)
 
