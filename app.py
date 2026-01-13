@@ -116,13 +116,26 @@ def register():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Check if email exists
+        # Check if email exists in registered clients
         cursor.execute("SELECT * FROM Registered_client WHERE Email = %s", (email,))
         if cursor.fetchone():
             cursor.close()
             conn.close()
             return "Email already registered", 400
-
+        
+        #check if email exists in clients
+        cursor.execute("SELECT * FROM Client WHERE Email = %s", (email,))
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+        else:
+            # Insert Email into Client table
+            first_name = name.split()[0]
+            last_name = ' '.join(name.split()[1:]) if len(name.split()) > 1 else ''
+            cursor.execute(
+                "INSERT INTO Client (Email, English_first_name, English_last_name) VALUES (%s, %s, %s)",
+                (email, first_name, last_name)
+            )
         # Insert new client
         cursor.execute(
             "INSERT INTO Registered_client (Email, Passport_number, Birth_date, Registered_password, Registration_date) VALUES (%s, %s, %s, %s, CURDATE())",
