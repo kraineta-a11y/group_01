@@ -13,8 +13,8 @@
     <strong>Price: </strong> {{flight.Price}}
     <p>Not what you were looking for? <a href="{{ url_for('landing_page') }}">Back to home page</a></p>
     {% if role == 'client' %}
-        <form method="get" action="{{ url_for('Check_out') }}">
-            <input type="hidden" name="Flight_number" value="flight.Flight_number">
+        <form method="get" action="{{ url_for('check_out') }}">
+            <input type="hidden" name="Flight_number" value="{{ flight.Flight_number }}">
             <button type="submit">Book Now!</button>
         </form>
     {% else %}
