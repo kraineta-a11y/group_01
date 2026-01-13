@@ -234,6 +234,9 @@ def admin_create_flight():
     cursor.execute("SELECT DISTINCT Destination_airport FROM Flying_route")
     destinations = cursor.fetchall()
 
+    cursor.execute("SELECT DISTINCT Plane_id FROM Plane")
+    planes = cursor.fetchall()
+
     if request.method == 'POST':
         origin = request.form['origin']
         destination = request.form['destination']

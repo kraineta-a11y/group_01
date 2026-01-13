@@ -24,6 +24,14 @@
     {% endfor %}
   </select>
 
+  <label>Plane ID</label>
+  <select name="plane_id" required>
+    <option value="">Select plane</option>
+    {% for p in planes %}
+      <option value="{{ p.Plane_id }}">{{ p.Plane_id }}</option>
+    {% endfor %}
+  </select>
+
   <label>Departure date</label>
   <input type="date" name="departure_date" required>
 
