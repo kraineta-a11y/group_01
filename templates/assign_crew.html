@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FLYTAU ADMIN</title>
+</head>
+<body>
+<h2>Assign Crew to Flight {{ flight_number }}</h2>
+
+<form method="post">
+  <h3>Pilots</h3>
+  {% for p in pilots %}
+    <label>
+      <input type="checkbox" name="pilots" value="{{ p.Employee_id }}">
+      {{ p.Hebrew_first_name }} {{ p.Hebrew_last_name }}
+    </label><br>
+  {% endfor %}
+
+  <h3>Stewards</h3>
+  {% for s in stewards %}
+    <label>
+      <input type="checkbox" name="stewards" value="{{ s.Employee_id }}">
+      {{ s.Hebrew_first_name }} {{ s.Hebrew_last_name }}
+    </label><br>
+  {% endfor %}
+
+  <button type="submit">Assign</button>
+</form>
+
+</body>
+</html>

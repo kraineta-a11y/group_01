@@ -219,6 +219,128 @@ def add_staff():
     cursor.close()
     conn.close()    
 
+@application.route('/admin/create-flight', methods=['GET', 'POST'])
+def admin_create_flight():
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Load airports for dropdowns
+    cursor.execute("SELECT DISTINCT Origin_airport FROM Flying_route")
+    origins = cursor.fetchall()
+
+    cursor.execute("SELECT DISTINCT Destination_airport FROM Flying_route")
+    destinations = cursor.fetchall()
+
+    if request.method == 'POST':
+        origin = request.form['origin']
+        destination = request.form['destination']
+        departure_date = request.form['departure_date']
+        departure_time = request.form['departure_time']
+        price = request.form['price']
+        manager_id = session['manager_employee_id']
+
+        # Find route
+        cursor.execute("""
+            SELECT Route_id
+            FROM Flying_route
+            WHERE Origin_airport = %s AND Destination_airport = %s
+        """, (origin, destination))
+
+        route = cursor.fetchone()
+
+        if not route:
+            cursor.close()
+            conn.close()
+            return "No such route exists", 400
+
+        route_id = route['Route_id']
+        try:
+            # Create flight
+            cursor.execute("""
+                INSERT INTO Flight (Route_id, Departure_date, Departure_time, Flight_status, Route_id)
+                VALUES (%s, %s, %s, 'ACTIVE', %s)
+            """, (route_id, departure_date, departure_time, route_id))
+
+            flight_number = cursor.lastrowid
+
+            # Set pricing
+            cursor.execute("""
+                INSERT INTO Flight_pricing (Flight_number, Price, Manager_employee_id)
+                VALUES (%s, %s, %s)
+            """, (flight_number, price, manager_id))
+
+            conn.commit()
+
+        except Exception as e:
+            conn.rollback()
+            raise e
+
+        finally:
+            cursor.close()
+            conn.close()
+
+        return redirect(url_for('admin_assign_crew', flight_number=flight_number))
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'create_flight.html',
+        origins=origins,
+        destinations=destinations
+    )
+
+@application.route('/admin/assign_crew', methods=['POST', 'GET'])
+def assign_crew():
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    flight_number = request.args.get('flight_number')
+    if request.method == 'POST':
+        pilots = request.form.getlist('pilots')
+        stewards = request.form.getlist('stewards')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            for pilot_id in pilots:
+                cursor.execute("""
+                    INSERT INTO Pilot_in_flight (Employee_id, Flight_number)
+                    VALUES (%s, %s)
+                """, (pilot_id, flight_number))
+
+            for steward_id in stewards:
+                cursor.execute("""
+                    INSERT INTO Steward_in_flight (Employee_id, Flight_number)
+                    VALUES (%s, %s)
+                """, (steward_id, flight_number))
+
+            conn.commit()
+
+        except Exception:
+            conn.rollback()
+            raise
+
+        finally:
+            cursor.close()
+            conn.close()
+
+        return redirect(url_for('admin_dashboard'))
+
+    # GET — show available staff
+    available_pilots = get_available_staff(flight_number, role='pilot')
+    available_stewards = get_available_staff(flight_number, role='steward')
+
+    return render_template(
+        'assign_crew.html',
+        flight_number=flight_number,
+        pilots=available_pilots,
+        stewards=available_stewards
+    )
+
 @application.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':

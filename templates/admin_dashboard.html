@@ -6,60 +6,11 @@
 <body>
     <h1>Admin Dashboard</h1>
     <p>Welcome, Admin!</p>
-    <h2>Create New Flight</h2>
-<form method="post" action="{{ url_for('create_flight') }}">
-    <!-- Flight Details -->
-    <input type="text" name="origin" placeholder="Origin" required>
-    <input type="text" name="destination" placeholder="Destination" required>
-    <input type="date" name="departure_date" required>
-    <input type="time" name="departure_time" required>
-    <input type="number" name="price" placeholder="Price" required>
-
-    <!-- Crew Assignment -->
-    <h3>Assign Crew</h3>
-    <label>Pilot:</label>
-    <select name="pilot_id" required>
-        {% for staff in available_pilots %}
-            <option value="{{ staff.Employee_id }}">{{ staff.Name }}</option>
-        {% endfor %}
-    </select>
-
-    <label>Flight Attendants:</label>
-    <select name="attendant_ids" multiple required>
-        {% for staff in available_attendants %}
-            <option value="{{ staff.Employee_id }}">{{ staff.Name }}</option>
-        {% endfor %}
-    </select>
-
-    <button type="submit">Create Flight</button>
-</form>
-    <h2>Add Staff</h2>
-    <form method="post" action="{{ url_for('add_staff') }}">
-        <input type="text" name="name" placeholder="Name" required><br><br>
-        <input type="email" name="email" placeholder="Email" required><br><br>
-        <input type="password" name="password" placeholder="Password" required><br><br>
-        <input type="text" name="employee_id" placeholder="Employee ID" required><br><br>
-        <input type="text" name="role" placeholder="Role" required><br><br>
-        <button type="submit">Add Staff</button>
-    </form>
-    <h2>View Flights</h2>
     <ul>
-        {% for flight in flights %}
-            <li>{{ flight.Flight_number }} - {{ flight.Origin_airport }} to {{ flight.Destination_airport }}</li>
-        {% endfor %}
-    </ul>
-    <h2>View Staff</h2>
-    <h3>Pilots</h3>
-    <ul>
-        {% for pilot in pilots %}
-            <li>{{ pilot.Employee_id }} - {{ pilot.Name }}</li>
-        {% endfor %}
-    </ul>
-    <h3>Cabin Crew</h3>
-    <ul>
-        {% for crew in stewards %}
-            <li>{{ crew.Employee_id }} - {{ crew.Name }}</li>
-        {% endfor %}
+        <!-- <li><a href="/admin/flights">Manage Flights</a></li> -->
+        <li><a href="/admin/create-flight">Create New Flight</a></li>
+        <li><a href="/admin/assign-crew">Assign Crew</a></li>
+        <!-- <li><a href="/admin/employees">Manage Staff</a></li> -->
     </ul>
 </body>
 </html>

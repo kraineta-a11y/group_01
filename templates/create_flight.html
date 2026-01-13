@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FLYTAU FLIGHT CREATION</title>
+</head>
+<body>
+    <h1>Create Flight</h1>
+
+<form method="post">
+
+  <label>Origin airport</label>
+  <select name="origin" required>
+    <option value="">Select origin</option>
+    {% for o in origins %}
+      <option value="{{ o.Origin_airport }}">{{ o.Origin_airport }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Destination airport</label>
+  <select name="destination" required>
+    <option value="">Select destination</option>
+    {% for d in destinations %}
+      <option value="{{ d.Destination_airport }}">{{ d.Destination_airport }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Departure date</label>
+  <input type="date" name="departure_date" required>
+
+  <label>Departure time</label>
+  <input type="time" name="departure_time" required>
+
+  <label>Price</label>
+  <input type="number" name="price" min="0" required>
+
+  <button type="submit">Create Flight</button>
+</form>
+</body>
+</html>
