@@ -132,7 +132,7 @@ def register():
         cursor.close()
         conn.close()
 
-        session['client_id'] = email  # log them in immediately
+        session['client_email'] = email  # log them in immediately
         return redirect(url_for('landing_page'))
 
     return render_template('register.html')
