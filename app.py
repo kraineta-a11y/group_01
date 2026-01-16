@@ -406,6 +406,7 @@ def assign_crew():
 
     # GET — show available staff
     flight_number = request.args.get('flight_number')
+    long_haul_required = is_long_haul_flight(flight_number)
     available_pilots = get_available_pilots(flight_number, long_haul_required)
     available_stewards = get_available_stewards(flight_number, long_haul_required)
 
