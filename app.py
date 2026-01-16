@@ -277,9 +277,9 @@ def admin_create_flight():
 
         # Set pricing
         cursor.execute("""
-            INSERT INTO Flight_pricing (Flight_number, Price, Manager_employee_id)
-            VALUES (%s, %s, %s)
-        """, (flight_number, price, manager_id))
+            INSERT INTO Flight_pricing (Flight_number, Plane_id, Price, Employee_id)
+            VALUES (%s, %s, %s, %s)
+        """, (flight_number, plane_id, price, manager_id))
 
         conn.commit()
         cursor.close()
