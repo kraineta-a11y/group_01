@@ -116,7 +116,7 @@ def get_available_pilots(flight_number, long_haul_required):
     return get_available_staff(
         flight_number,
         employee_table="Pilot",
-        assignment_table="Pilot_in_flight",
+        assignment_table="Pilots_in_flight",
         extra_conditions=condition
     )
 def get_available_stewards(flight_number, long_haul_required):
@@ -126,7 +126,7 @@ def get_available_stewards(flight_number, long_haul_required):
     return get_available_staff(
         flight_number,
         employee_table="Steward",
-        assignment_table="Steward_in_flight", 
+        assignment_table="Stewards_in_flight", 
         extra_conditions=condition
     )
 
