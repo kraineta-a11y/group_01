@@ -371,6 +371,7 @@ def assign_crew():
                     flight_number=flight_number,
                     pilots=get_available_pilots(flight_number, long_haul_required),
                     stewards=get_available_stewards(flight_number, long_haul_required),
+                    long_haul_required=long_haul_required,
                     error=error
                 )
         else:
@@ -383,6 +384,7 @@ def assign_crew():
                     flight_number=flight_number,
                     pilots=get_available_pilots(flight_number, long_haul_required),
                     stewards=get_available_stewards(flight_number, long_haul_required),
+                    long_haul_required=long_haul_required,
                     error=error
                 )
 
@@ -415,6 +417,8 @@ def assign_crew():
         flight_number=flight_number,
         pilots=available_pilots,
         stewards=available_stewards,
+        long_haul_required=long_haul_required,
+        error=error
     )
 
 @application.route('/login', methods=['GET', 'POST'])
