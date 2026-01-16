@@ -315,7 +315,7 @@ def admin_create_flight():
         cursor.close()
         conn.close()
 
-        return redirect(url_for('assign_crew', flight_number=flight_number))
+        return redirect(url_for('assign_crew', flight_number=flight_number, long_haul_required=(plane_size == 'LARGE')))
     cursor.close()
     conn.close()
 
@@ -329,26 +329,54 @@ def admin_create_flight():
 
 @application.route('/admin/assign_crew', methods=['POST', 'GET'])
 def assign_crew():
+    error = None
+
     if get_user_role() != 'manager':
         return "Forbidden", 403
 
     if request.method == 'POST':
+        long_haul_required = request.form.get('long_haul_required') == 'true'
         flight_number = request.form.get('flight_number')
         pilots = request.form.getlist('pilots')
         stewards = request.form.getlist('stewards')
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        # checking long haul requirements are met
+        if long_haul_required:
+            if len(pilots) != 3 or len(stewards) != 6:
+                cursor.close()
+                conn.close()
+                error = "Invalid crew assignment for long-haul flight."
+                return render_template(
+                    'assign_crew.html',
+                    flight_number=flight_number,
+                    pilots=get_available_pilots(flight_number, long_haul_required),
+                    stewards=get_available_stewards(flight_number, long_haul_required),
+                    long_haul_required=long_haul_required,
+                    error=error
+                )
+        else:
+            if len(pilots) != 2 or len(stewards) != 3:
+                cursor.close()
+                conn.close()
+                error = "Invalid crew assignment for short-haul flight."
+                return render_template(
+                    'assign_crew.html',
+                    flight_number=flight_number,
+                    pilots=get_available_pilots(flight_number, long_haul_required),
+                    stewards=get_available_stewards(flight_number, long_haul_required),
+                    long_haul_required=long_haul_required,
+                    error=error
+                )
 
         for pilot_id in pilots:
             cursor.execute("""
-                INSERT INTO Pilot_in_flight (Employee_id, Flight_number)
+                INSERT INTO Pilots_in_flight (Employee_id, Flight_number)
                 VALUES (%s, %s)
             """, (pilot_id, flight_number))
 
         for steward_id in stewards:
             cursor.execute("""
-                INSERT INTO Steward_in_flight (Employee_id, Flight_number)
+                INSERT INTO Stewards_in_flight (Employee_id, Flight_number)
                 VALUES (%s, %s)
             """, (steward_id, flight_number))
 
@@ -379,7 +407,8 @@ def assign_crew():
         'assign_crew.html',
         flight_number=flight_number,
         pilots=available_pilots,
-        stewards=available_stewards
+        stewards=available_stewards,
+        long_haul_required=long_haul_required
     )
 
 @application.route('/login', methods=['GET', 'POST'])
