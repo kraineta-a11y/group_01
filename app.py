@@ -163,7 +163,12 @@ def build_edit_flight_context(flight_number, error=None):
         cursor.close()
         conn.close()
         return None
+    cursor.execute("SELECT Route_id, Origin_airport, Destination_airport FROM Flying_route")
+    route = cursor.fetchall()
 
+    cursor.execute("SELECT Plane_id, Manufacturer FROM Plane")
+    plane = cursor.fetchall()
+    
     cursor.execute("SELECT Employee_id, Hebrew_first_name, Hebrew_last_name FROM Pilot")
     pilots = cursor.fetchall()
 
@@ -181,6 +186,8 @@ def build_edit_flight_context(flight_number, error=None):
 
     return {
         'flight': flight,
+        'routes': route,
+        'planes': plane,
         'pilots': pilots,
         'stewards': stewards,
         'assigned_pilots': assigned_pilots,
@@ -190,7 +197,7 @@ def build_edit_flight_context(flight_number, error=None):
 # flight and crew management helpers
 
 def handle_flight_update(flight_number):
-    route_id = request.form['origin']
+    route_id = request.form['route']
     date = request.form['departure_date']
     time = request.form['departure_time']
     status = request.form['status']
