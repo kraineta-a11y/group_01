@@ -390,18 +390,18 @@ SELECT coalesce(SUM(CASE
 		coalesce(SUM(CASE
                       WHEN flying_route.Duration>6 THEN flying_route.Duration
 					 END),0) AS sum_long_duration,
-           pilot.Employee_id
-FROM pilots_in_flight
+           Pilot.Employee_id
+FROM Pilots_in_flight
      INNER JOIN 
      flight 
-     ON flight.Flight_number = pilots_in_flight.Flight_number
+     ON flight.Flight_number = Pilots_in_flight.Flight_number
      INNER JOIN
      flying_route
      ON flight.Route_id = flying_route.Route_id
      INNER JOIN
-     pilot
-     ON pilots_in_flight.Employee_id = pilot.Employee_id
-GROUP BY pilot.Employee_id
+     Pilot
+     ON Pilots_in_flight.Employee_id = Pilot.Employee_id
+GROUP BY Pilot.Employee_id
 UNION
 SELECT coalesce(SUM(CASE
                      WHEN flying_route.Duration<=6 THEN flying_route.Duration
@@ -409,18 +409,18 @@ SELECT coalesce(SUM(CASE
 		coalesce(SUM(CASE
                       WHEN flying_route.Duration>6 THEN flying_route.Duration
 					 END),0) AS sum_long_duration,
-           steward.Employee_id
-FROM stewards_in_flight
+           Steward.Employee_id
+FROM Stewards_in_flight
      INNER JOIN 
      flight 
-     ON flight.Flight_number = stewards_in_flight.Flight_number
+     ON flight.Flight_number = Stewards_in_flight.Flight_number
      INNER JOIN
      flying_route
      ON flight.Route_id = flying_route.Route_id
      INNER JOIN
-     steward
-     ON stewards_in_flight.Employee_id = steward.Employee_id
-GROUP BY steward.Employee_id;
+     Steward
+     ON Stewards_in_flight.Employee_id = Steward.Employee_id
+GROUP BY Steward.Employee_id;
 """)
     
     staff_flight_hours = cursor.fetchall()
