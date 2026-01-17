@@ -168,7 +168,7 @@ def build_edit_flight_context(flight_number, error=None):
 
     cursor.execute("SELECT Plane_id, Manufacturer FROM Plane")
     plane = cursor.fetchall()
-    
+
     cursor.execute("SELECT Employee_id, Hebrew_first_name, Hebrew_last_name FROM Pilot")
     pilots = cursor.fetchall()
 
@@ -324,6 +324,222 @@ def admin_dashboard():
     conn.close()
     return render_template('admin_dashboard.html', flights=flights, pilots=pilots, stewards=stewards)
 
+# Admin employee management 
+
+@application.route('/admin/employees')
+def employees():
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT Employee_id, Hebrew_first_name, Hebrew_last_name, Long_haul_qualified
+        FROM Pilot
+    """)
+    pilots = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT Employee_id, Hebrew_first_name, Hebrew_last_name
+        FROM Steward
+    """)
+    stewards = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'employees.html',
+        pilots=pilots,
+        stewards=stewards
+    )
+
+# Add employees
+@application.route('/admin/employees/add/pilot', methods=['GET', 'POST'])
+def add_pilot():
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+    if request.method == 'POST':
+        first = request.form['first_name']
+        last = request.form['last_name']
+        long_haul = 'long_haul' in request.form
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO Pilot (Hebrew_first_name, Hebrew_last_name, Long_haul_qualified)
+            VALUES (%s, %s, %s)
+        """, (first, last, long_haul))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return redirect(url_for('employees'))
+
+    return render_template('add_pilot.html')
+
+@application.route('/admin/employees/add/steward', methods=['GET', 'POST'])
+def add_steward():
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+    if request.method == 'POST':
+        first = request.form['first_name']
+        last = request.form['last_name']
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO Steward (Hebrew_first_name, Hebrew_last_name)
+            VALUES (%s, %s)
+        """, (first, last))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return redirect(url_for('employees'))
+
+    return render_template('add_steward.html')
+
+# Edit employees
+
+@application.route('/admin/employees/pilots/<int:pilot_id>/edit', methods=['GET', 'POST'])
+def edit_pilot(pilot_id):
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        long_haul = 'long_haul' in request.form
+
+        cursor.execute("""
+            UPDATE Pilot
+            SET Long_haul_qualified = %s
+            WHERE Employee_id = %s
+        """, (long_haul, pilot_id))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return redirect(url_for('employees'))
+
+    cursor.execute("""
+        SELECT Employee_id, Hebrew_first_name, Hebrew_last_name, Long_haul_qualified
+        FROM Pilot WHERE Employee_id = %s
+    """, (pilot_id,))
+    pilot = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('edit_pilot.html', pilot=pilot)
+
+@application.route('/admin/employees/Stewards/<int:steward_id>/edit', methods=['GET', 'POST'])
+def edit_steward(steward_id):
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        long_haul = 'long_haul' in request.form
+
+        cursor.execute("""
+            UPDATE Steward
+            SET Long_haul_qualified = %s
+            WHERE Employee_id = %s
+        """, (long_haul, steward_id))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return redirect(url_for('employees'))
+
+    cursor.execute("""
+        SELECT Employee_id, Hebrew_first_name, Hebrew_last_name, Long_haul_qualified
+        FROM Steward WHERE Employee_id = %s
+    """, (steward_id,))
+    steward = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('edit_steward.html', steward=steward)
+
+# Delete employees
+
+@application.route('/admin/employees/pilots/<int:pilot_id>/delete', methods=['POST'])
+def delete_pilot(pilot_id):
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Block deletion if assigned to flights
+    cursor.execute("""
+        SELECT 1 FROM Pilots_in_flight
+        WHERE Employee_id = %s
+        LIMIT 1
+    """, (pilot_id,))
+    in_use = cursor.fetchone()
+
+    if in_use:
+        cursor.close()
+        conn.close()
+        return "Cannot delete pilot assigned to flights", 400
+
+    cursor.execute("""
+        DELETE FROM Pilot WHERE Employee_id = %s
+    """, (pilot_id,))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for('employees'))
+
+@application.route('/admin/employees/stewards/<int:steward_id>/delete', methods=['POST'])
+def delete_steward(steward_id):
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Block deletion if assigned to flights
+    cursor.execute("""
+        SELECT 1 FROM Stewards_in_flight
+        WHERE Employee_id = %s
+        LIMIT 1
+    """, (steward_id,))
+    in_use = cursor.fetchone()
+
+    if in_use:
+        cursor.close()
+        conn.close()
+        return "Cannot delete steward assigned to flights", 400
+
+    cursor.execute("""
+        DELETE FROM Steward WHERE Employee_id = %s
+    """, (steward_id,))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for('employees'))
+
+
 @application.route('/admin/create_flight', methods=['POST'])
 def create_flight():
     manager_id = session['manager_employee_id']
@@ -424,32 +640,8 @@ def edit_flight(flight_number):
 
     return render_template('edit_flight.html', **context)
 
-@application.route('/admin/add_staff', methods=['POST'])
-def add_staff():
-    if get_user_role() != 'manager':
-        return "Forbidden", 403
-    manager_id = session['manager_employee_id']
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
 
-    # Get form data
-    name = request.form['name']
-    email = request.form['email']
-    password = request.form['password']
-    employee_id = request.form['employee_id']
-    role = request.form['role']
-    first_name = name.split()[0]
-    last_name = ' '.join(name.split()[1:]) if len(name.split()) > 1 else ''
 
-    # Insert staff into database based on role
-    cursor.execute(
-        "INSERT INTO {role} (Employee_id, Added_by_manager_id, Hebrew_first_name, Hebrew_last_name, Employment_date) VALUES (%s, %s, %s, %s, %s)".format(role=role),
-        (employee_id, manager_id, first_name, last_name, datetime.now().date())
-    )
-    conn.commit()
-
-    cursor.close()
-    conn.close()    
 
 @application.route('/admin/create-flight', methods=['GET', 'POST'])
 def admin_create_flight():

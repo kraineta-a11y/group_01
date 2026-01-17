@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FLYTAU EMPLOYEES</title>
+</head>
+<body>
+<h1>Add Employees</h1>
+
+<a href="{{ url_for('add_pilot') }}">➕ Add Pilot</a><br>
+<a href="{{ url_for('add_steward') }}">➕ Add Steward</a>
+
+<h2>Pilots</h2>
+<table border="1">
+  <tr>
+    <th>Name</th>
+    <th>Long haul</th>
+    <th>Actions</th>
+  </tr>
+  {% for p in pilots %}
+  <tr>
+    <td>{{ p.Hebrew_first_name }} {{ p.Hebrew_last_name }}</td>
+    <td>{{ "Yes" if p.Long_haul_qualified else "No" }}</td>
+    <td>
+      <a href="{{ url_for('edit_pilot', pilot_id=p.Employee_id) }}">Edit</a>
+      |
+      <a href="{{ url_for('delete_pilot', pilot_id=p.Employee_id) }}"
+         onclick="return confirm('Delete this pilot?')">Delete</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Stewards</h2>
+<table border="1">
+  <tr>
+    <th>Name</th>
+    <th>Actions</th>
+  </tr>
+  {% for s in stewards %}
+  <tr>
+    <td>{{ s.Hebrew_first_name }} {{ s.Hebrew_last_name }}</td>
+    <td>
+      <a href="{{ url_for('edit_steward', steward_id=s.Employee_id) }}">Edit</a>
+      |
+      <a href="{{ url_for('delete_steward', steward_id=s.Employee_id) }}"
+         onclick="return confirm('Delete this steward?')">Delete</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</body>
+</html>

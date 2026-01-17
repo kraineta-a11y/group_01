@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FLYTAU ADMIN</title>
+</head>
+<body>
+<h1>Edit Pilot</h1>
+
+<form method="POST">
+  First name:
+  <input name="first_name" value="{{ pilot.Hebrew_first_name }}" required><br>
+
+  Last name:
+  <input name="last_name" value="{{ pilot.Hebrew_last_name }}" required><br>
+
+  <label>
+    <input type="checkbox" name="long_haul"
+           {% if pilot.Long_haul_qualified %}checked{% endif %}>
+    Long haul qualified
+  </label><br>
+
+  <button type="submit">Save</button>
+  <a href="{{ url_for('employees') }}">Cancel</a>
+</form>
+
+</body>
+</html>
