@@ -44,11 +44,10 @@
   {% for r in staff_flight_hours %}
   <tr>
     <td>{{ r.Employee_id }}</td>
-    <td>{{ r.short_hours }}</td>
-    <td>{{ r.long_hours }}</td>
+    <td>{{ r.sum_short_duration }}</td>
+    <td>{{ r.sum_long_duration }}</td>
   </tr>
   {% endfor %}
 </table>
-{{ staff_flight_hours }}
 </body>
 </html>
