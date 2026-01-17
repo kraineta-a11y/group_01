@@ -151,7 +151,7 @@ def build_edit_flight_context(flight_number, error=None):
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT f.Flight_number, p.Size
+        SELECT f.Flight_number, p.Size, f.Route_id, f.Departure_date, f.Departure_time, f.Flight_status, p.plane_id
         FROM Flight f
         JOIN Plane p ON f.Plane_id = p.Plane_id
         WHERE f.Flight_number = %s

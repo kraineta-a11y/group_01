@@ -18,7 +18,7 @@
     <input type="hidden" name="action" value="update_flight">
 
     <label>Origin</label>
-    <select name="origin">
+    <select name="origin" required>
         {% for r in routes %}
             <option value="{{ r.Route_id }}"
               {% if r.Route_id == flight.Route_id %}selected{% endif %}>
@@ -28,11 +28,19 @@
     </select>
 
     <label>Departure date</label>
-    <input type="date" name="departure_date" value="{{ flight.Departure_date }}">
+    <input type="date" required name="departure_date" value="{{ flight.Departure_date }}">
 
     <label>Departure time</label>
-    <input type="time" name="departure_time" value="{{ flight.Departure_time }}">
-
+    <input type="time" required name="departure_time" value="{{ flight.Departure_time }}">
+    <label>Plane ID</label>
+    <select name="plane_id" required>
+        {% for p in planes %}
+            <option value="{{ p.Plane_id }}"
+              {% if p.Plane_id == flight.Plane_id %}selected{% endif %}>
+              {{ p.Plane_id }}
+            </option>
+        {% endfor %}
+    </select>
     <label>Status</label>
     <select name="status">
         {% for s in ['ACTIVE', 'CANCELLED', 'DELAYED'] %}
@@ -54,6 +62,7 @@
     <input type="hidden" name="action" value="update_crew">
 
     <!-- pilots -->
+     <strong>Pilots:</strong><br>
     {% for pilot in pilots %}
         <label>
             <input type="checkbox" name="pilots"
@@ -64,6 +73,7 @@
     {% endfor %}
 
     <!-- stewards -->
+    <strong>Stewards:</strong><br>
     {% for steward in stewards %}
         <label>
             <input type="checkbox" name="stewards"
