@@ -10,7 +10,7 @@
 
 <p>Plane size: <strong>{{ flight.Size }}</strong></p>
 
-<form method="POST">
+<form method="POST" action="{{ url_for('update_flight', flight_number=flight.Flight_number) }}">
 
     <h2>Pilots</h2>
     {% for pilot in pilots %}
