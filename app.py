@@ -186,6 +186,104 @@ def build_edit_flight_context(flight_number, error=None):
         'assigned_stewards': assigned_stewards,
         'error': error
     }
+# flight and crew management helpers
+
+def handle_flight_update(flight_number):
+    route_id = request.form['origin']
+    date = request.form['departure_date']
+    time = request.form['departure_time']
+    status = request.form['status']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE Flight
+        SET Route_id = %s,
+            Departure_date = %s,
+            Departure_time = %s,
+            Flight_status = %s
+        WHERE Flight_number = %s
+    """, (route_id, date, time, status, flight_number))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for('edit_flight', flight_number=flight_number))
+
+def handle_crew_update(flight_number):
+    pilot_ids = request.form.getlist('pilots')
+    steward_ids = request.form.getlist('stewards')
+
+    # Validate flight exists
+    if not flight_number:
+        return "Flight number missing", 400
+
+    # Determine long/short haul
+    long_haul_required = is_long_haul_flight(flight_number)
+
+    # Validate crew size
+    if long_haul_required:
+        if len(pilot_ids) != 3 or len(steward_ids) != 6:
+            context = build_edit_flight_context(
+                flight_number,
+                error="Long-haul flights require exactly 3 pilots and 6 stewards."
+            )
+            return render_template('edit_flight.html', **context)
+    else:
+        if len(pilot_ids) != 2 or len(steward_ids) != 3:
+            context = build_edit_flight_context(
+                flight_number,
+                error="Short-haul flights require exactly 2 pilots and 3 stewards."
+            )
+            return render_template('edit_flight.html', **context)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Remove existing assignments
+        cursor.execute(
+            "DELETE FROM Pilots_in_flight WHERE Flight_number = %s",
+            (flight_number,)
+        )
+        cursor.execute(
+            "DELETE FROM Stewards_in_flight WHERE Flight_number = %s",
+            (flight_number,)
+        )
+
+        # Insert new pilots
+        for pid in pilot_ids:
+            cursor.execute(
+                """
+                INSERT INTO Pilots_in_flight (Flight_number, Employee_id)
+                VALUES (%s, %s)
+                """,
+                (flight_number, pid)
+            )
+
+        # Insert new stewards
+        for sid in steward_ids:
+            cursor.execute(
+                """
+                INSERT INTO Stewards_in_flight (Flight_number, Employee_id)
+                VALUES (%s, %s)
+                """,
+                (flight_number, sid)
+            )
+
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('edit_flight', flight_number=flight_number))
 
 @application.route("/")
 def landing_page():
@@ -298,115 +396,25 @@ def admin_flights(): # View and manage flights
 
     return render_template('flights.html', flights=flights)
 
-@application.route('/admin/flights/<int:flight_number>/edit', methods=['GET'])
+@application.route('/admin/flights/<int:flight_number>/edit', methods=['GET', 'POST'])
 def edit_flight(flight_number):
     if get_user_role() != 'manager':
         return "Forbidden", 403
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        if action == 'update_flight':
+            return handle_flight_update(flight_number)
+
+        if action == 'update_crew':
+            return handle_crew_update(flight_number)
 
     context = build_edit_flight_context(flight_number)
     if not context:
         return "Flight not found", 404
 
-    error = None
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute("""
-        SELECT f.Flight_number, p.Size
-        FROM Flight f
-        JOIN Plane p ON f.Plane_id = p.Plane_id
-        WHERE f.Flight_number = %s
-    """, (flight_number,))
-    flight = cursor.fetchone()
-
-    if not flight:
-        cursor.close()
-        conn.close()
-        error = "Flight not found"
-        return render_template(
-            'edit_flight.html',
-            flight=None,
-            pilots=[],
-            stewards=[],
-            assigned_pilots=set(),
-            assigned_stewards=set(),
-            error=error
-        )
-
-    available_pilots = get_available_pilots(flight_number, flight['Size'] == 'LARGE')
-    cursor.execute("SELECT Employee_id FROM Pilots_in_flight WHERE Flight_number = %s", (flight_number,))
-    assigned_pilots = {row['Employee_id'] for row in cursor.fetchall()}
-
-    available_stewards = get_available_stewards(flight_number, flight['Size'] == 'LARGE')
-    cursor.execute("SELECT Employee_id FROM Stewards_in_flight WHERE Flight_number = %s", (flight_number,))
-    assigned_stewards = {row['Employee_id'] for row in cursor.fetchall()}
-
-    cursor.close()
-    conn.close()
-
-    return render_template(
-        'edit_flight.html',
-        ** context
-    )
-
-@application.route('/admin/flights/<int:flight_number>/edit', methods=['POST'])
-def update_flight(flight_number):
-    if get_user_role() != 'manager':
-        return "Forbidden", 403
-    error = None
-    pilot_ids = request.form.getlist('pilots')
-    steward_ids = request.form.getlist('stewards')
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # check if long haul requirements are met
-    long_haul_required = is_long_haul_flight(flight_number)
-    if long_haul_required:
-        if len(pilot_ids) != 3 or len(steward_ids) != 6:
-            context = build_edit_flight_context(
-                flight_number,
-                error="Invalid crew assignment for long-haul flight."
-            )
-            return render_template(
-                'edit_flight.html', **context)
-    else:
-        if len(pilot_ids) != 2 or len(steward_ids) != 3:
-            context = build_edit_flight_context(
-                flight_number,
-                error="Invalid crew assignment for short-haul flight."
-            )
-            return render_template(
-                'edit_flight.html', **context)
-
-
-    cursor.execute(
-        "DELETE FROM Pilots_in_flight WHERE Flight_number = %s",
-        (flight_number,)
-    )
-    cursor.execute(
-        "DELETE FROM Stewards_in_flight WHERE Flight_number = %s",
-        (flight_number,)
-    )
-
-    for pid in pilot_ids:
-        cursor.execute(
-            "INSERT INTO Pilots_in_flight (Flight_number, Employee_id) VALUES (%s, %s)",
-            (flight_number, pid)
-        )
-
-    for sid in steward_ids:
-        cursor.execute(
-            "INSERT INTO Stewards_in_flight (Flight_number, Employee_id) VALUES (%s, %s)",
-            (flight_number, sid)
-        )
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return redirect(url_for('edit_flight', flight_number=flight_number))
-
+    return render_template('edit_flight.html', **context)
 
 @application.route('/admin/add_staff', methods=['POST'])
 def add_staff():

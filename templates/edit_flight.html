@@ -8,48 +8,72 @@
 
 <h1>Edit Flight {{ flight.Flight_number }}</h1>
 
-<p>Plane size: <strong>{{ flight.Size }}</strong></p>
+{% if error %}
+  <div class="error-box">{{ error }}</div>
+{% endif %}
 
-<form method="POST" action="{{ url_for('update_flight', flight_number=flight.Flight_number) }}">
+<!-- FLIGHT DETAILS -->
+<h2>Flight details</h2>
+<form method="POST">
+    <input type="hidden" name="action" value="update_flight">
 
-    <h2>Pilots</h2>
+    <label>Origin</label>
+    <select name="origin">
+        {% for r in routes %}
+            <option value="{{ r.Route_id }}"
+              {% if r.Route_id == flight.Route_id %}selected{% endif %}>
+              {{ r.Origin_airport }} → {{ r.Destination_airport }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Departure date</label>
+    <input type="date" name="departure_date" value="{{ flight.Departure_date }}">
+
+    <label>Departure time</label>
+    <input type="time" name="departure_time" value="{{ flight.Departure_time }}">
+
+    <label>Status</label>
+    <select name="status">
+        {% for s in ['ACTIVE', 'CANCELLED', 'DELAYED'] %}
+            <option value="{{ s }}"
+              {% if s == flight.Flight_status %}selected{% endif %}>
+              {{ s }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Save flight details</button>
+</form>
+
+<hr>
+
+<!-- CREW -->
+<h2>Crew assignment</h2>
+<form method="POST">
+    <input type="hidden" name="action" value="update_crew">
+
+    <!-- pilots -->
     {% for pilot in pilots %}
         <label>
-            <input
-                type="checkbox"
-                name="pilots"
-                value="{{ pilot.Employee_id }}"
-                {% if pilot.Employee_id in assigned_pilots %}checked{% endif %}
-            >
+            <input type="checkbox" name="pilots"
+                   value="{{ pilot.Employee_id }}"
+                   {% if pilot.Employee_id in assigned_pilots %}checked{% endif %}>
             {{ pilot.Hebrew_first_name }} {{ pilot.Hebrew_last_name }}
-        </label>
-        <br>
+        </label><br>
     {% endfor %}
 
-    <h2>Stewards</h2>
+    <!-- stewards -->
     {% for steward in stewards %}
         <label>
-            <input
-                type="checkbox"
-                name="stewards"
-                value="{{ steward.Employee_id }}"
-                {% if steward.Employee_id in assigned_stewards %}checked{% endif %}
-            >
+            <input type="checkbox" name="stewards"
+                   value="{{ steward.Employee_id }}"
+                   {% if steward.Employee_id in assigned_stewards %}checked{% endif %}>
             {{ steward.Hebrew_first_name }} {{ steward.Hebrew_last_name }}
-        </label>
-        <br>
+        </label><br>
     {% endfor %}
 
-    <br>
-
-    <button type="submit">Save changes</button>
-    <a href="{{ url_for('admin_flights') }}">Cancel</a>
-
+    <button type="submit">Save crew</button>
 </form>
-{% if error %}
-  <div class="error-box">
-    {{ error }}
-  </div>
-{% endif %}
 </body>
 </html>
