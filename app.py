@@ -442,12 +442,18 @@ def edit_pilot(pilot_id):
 
     if request.method == 'POST':
         long_haul = 'long_haul' in request.form
+        city = request.form['city']
+        street = request.form['street']
+        house_number = request.form['house_number']
+        phone_number = request.form['phone_number']
+        zip_code = request.form['zip_code']
 
         cursor.execute("""
             UPDATE Pilot
-            SET Long_haul_qualified = %s
+            SET Long_haul_qualified = %s, City = %s, Street = %s, House_number = %s, Phone_number = %s, Zip_code = %s
+                       
             WHERE Employee_id = %s
-        """, (long_haul, pilot_id))
+        """, (long_haul, city, street, house_number, phone_number, zip_code, pilot_id))
 
         conn.commit()
         cursor.close()
@@ -476,12 +482,17 @@ def edit_steward(steward_id):
 
     if request.method == 'POST':
         long_haul = 'long_haul' in request.form
+        city = request.form['city']
+        street = request.form['street']
+        house_number = request.form['house_number']
+        phone_number = request.form['phone_number']
+        zip_code = request.form['zip_code']
 
         cursor.execute("""
             UPDATE Steward
-            SET Long_haul_qualified = %s
+            SET Long_haul_qualified = %s , City = %s, Street = %s, House_number = %s, Phone_number = %s, Zip_code = %s
             WHERE Employee_id = %s
-        """, (long_haul, steward_id))
+        """, (long_haul, city, street, house_number, phone_number, zip_code, steward_id))
 
         conn.commit()
         cursor.close()
