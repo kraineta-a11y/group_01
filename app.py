@@ -333,15 +333,11 @@ def edit_flight(flight_number):
             error=error
         )
 
-    cursor.execute("SELECT Employee_id, Hebrew_first_name, Hebrew_last_name FROM Pilot")
-    pilots = cursor.fetchall()
-
+    available_pilots = get_available_pilots(flight_number, flight['Size'] == 'LARGE')
     cursor.execute("SELECT Employee_id FROM Pilots_in_flight WHERE Flight_number = %s", (flight_number,))
     assigned_pilots = {row['Employee_id'] for row in cursor.fetchall()}
 
-    cursor.execute("SELECT Employee_id, Hebrew_first_name, Hebrew_last_name FROM Steward")
-    stewards = cursor.fetchall()
-
+    available_stewards = get_available_stewards(flight_number, flight['Size'] == 'LARGE')
     cursor.execute("SELECT Employee_id FROM Stewards_in_flight WHERE Flight_number = %s", (flight_number,))
     assigned_stewards = {row['Employee_id'] for row in cursor.fetchall()}
 
