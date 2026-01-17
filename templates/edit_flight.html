@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Flight {{ flight.Flight_number }}</title>
+</head>
+<body>
+
+<h1>Edit Flight {{ flight.Flight_number }}</h1>
+
+<p>Plane size: <strong>{{ flight.Size }}</strong></p>
+
+<form method="POST">
+
+    <h2>Pilots</h2>
+    {% for pilot in pilots %}
+        <label>
+            <input
+                type="checkbox"
+                name="pilots"
+                value="{{ pilot.Employee_id }}"
+                {% if pilot.Employee_id in assigned_pilots %}checked{% endif %}
+            >
+            {{ pilot.Name }}
+        </label>
+        <br>
+    {% endfor %}
+
+    <h2>Stewards</h2>
+    {% for steward in stewards %}
+        <label>
+            <input
+                type="checkbox"
+                name="stewards"
+                value="{{ steward.Employee_id }}"
+                {% if steward.Employee_id in assigned_stewards %}checked{% endif %}
+            >
+            {{ steward.Name }}
+        </label>
+        <br>
+    {% endfor %}
+
+    <br>
+
+    <button type="submit">Save changes</button>
+    <a href="{{ url_for('admin_flights') }}">Cancel</a>
+
+</form>
+
+</body>
+</html>

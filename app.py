@@ -212,6 +212,145 @@ def create_flight():
     cursor.close()
     conn.close()
 
+@application.route('/admin/flights', methods=['GET'])
+def admin_flights(): # View and manage flights
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    query = """
+        SELECT
+            f.Flight_number,
+            fr.Origin_airport,
+            fr.Destination_airport,
+            COUNT(DISTINCT pf.Employee_id) AS pilot_count,
+            COUNT(DISTINCT sf.Employee_id) AS steward_count,
+            p.Size
+        FROM Flight f
+        JOIN Flying_route fr ON f.Route_id = fr.Route_id
+        JOIN Plane p ON f.Plane_id = p.Plane_id
+        LEFT JOIN Pilots_in_flight pf ON f.Flight_number = pf.Flight_number
+        LEFT JOIN Stewards_in_flight sf ON f.Flight_number = sf.Flight_number
+        GROUP BY f.Flight_number, p.Size, fr.Origin_airport, fr.Destination_airport
+    """
+
+    cursor.execute(query)
+    flights = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    for flight in flights:
+        if flight['Size'] == 'LARGE':
+            required_pilots = 3
+            required_stewards = 6
+        else:
+            required_pilots = 2
+            required_stewards = 3
+
+        flight['ready'] = (
+            flight['pilot_count'] == required_pilots and
+            flight['steward_count'] == required_stewards
+        )
+
+    return render_template('flights.html', flights=flights)
+
+@application.route('/admin/flights/<int:flight_number>/edit', methods=['GET'])
+def edit_flight(flight_number):
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT f.Flight_number, p.Size
+        FROM Flight f
+        JOIN Plane p ON f.Plane_id = p.Plane_id
+        WHERE f.Flight_number = %s
+    """, (flight_number,))
+    flight = cursor.fetchone()
+
+    if not flight:
+        cursor.close()
+        conn.close()
+        return "Flight not found", 404
+
+    cursor.execute("SELECT Employee_id, Name FROM Pilot")
+    pilots = cursor.fetchall()
+
+    cursor.execute("SELECT Employee_id FROM Pilots_in_flight WHERE Flight_number = %s", (flight_number,))
+    assigned_pilots = {row['Employee_id'] for row in cursor.fetchall()}
+
+    cursor.execute("SELECT Employee_id, Name FROM Steward")
+    stewards = cursor.fetchall()
+
+    cursor.execute("SELECT Employee_id FROM Stewards_in_flight WHERE Flight_number = %s", (flight_number,))
+    assigned_stewards = {row['Employee_id'] for row in cursor.fetchall()}
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'edit_flight.html',
+        flight=flight,
+        pilots=pilots,
+        stewards=stewards,
+        assigned_pilots=assigned_pilots,
+        assigned_stewards=assigned_stewards
+    )
+
+@application.route('/admin/flights/<int:flight_number>/edit', methods=['POST'])
+def update_flight(flight_number):
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    pilot_ids = request.form.getlist('pilots')
+    steward_ids = request.form.getlist('stewards')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "DELETE FROM Pilots_in_flight WHERE Flight_number = %s",
+            (flight_number,)
+        )
+        cursor.execute(
+            "DELETE FROM Stewards_in_flight WHERE Flight_number = %s",
+            (flight_number,)
+        )
+
+        for pid in pilot_ids:
+            cursor.execute(
+                "INSERT INTO Pilots_in_flight (Flight_number, Employee_id) VALUES (%s, %s)",
+                (flight_number, pid)
+            )
+
+        for sid in steward_ids:
+            cursor.execute(
+                "INSERT INTO Stewards_in_flight (Flight_number, Employee_id) VALUES (%s, %s)",
+                (flight_number, sid)
+            )
+
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        cursor.close()
+        conn.close()
+        return "Failed to update flight", 400
+
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for('edit_flight', flight_number=flight_number))
+
+
+
+
 @application.route('/admin/add_staff', methods=['POST'])
 def add_staff():
     if get_user_role() != 'manager':
