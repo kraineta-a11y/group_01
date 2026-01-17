@@ -6,7 +6,7 @@
 <body>
 <h1>Add Pilot</h1>
 
-<form method="POST">
+<form method="POST" action="{{ url_for('add_pilot') }}">
   First name: <input name="first_name" required><br>
   Last name: <input name="last_name" required><br>
   city: <input name="city" required><br>

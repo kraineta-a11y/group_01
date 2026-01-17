@@ -13,15 +13,15 @@
   Last name:
   <input name="last_name" value="{{ pilot.Hebrew_last_name }}" required><br>
   City:
-  <input name="city" value="{{ steward.City }}" required><br>
+  <input name="city" value="{{ pilot.City }}" required><br>
     Street:
-    <input name="street" value="{{ steward.Street }}" required><br>
+    <input name="street" value="{{ pilot.Street }}" required><br>
     House Number:
-    <input name="house_number" value="{{ steward.House_number }}" required><br>
+    <input name="house_number" value="{{ pilot.House_number }}" required><br>
     Phone Number:
-    <input name="phone_number" value="{{ steward.Phone_number }}" required><br>
+    <input name="phone_number" value="{{ pilot.Phone_number }}" required><br>
     Zip Code:
-    <input name="zip_code" value="{{ steward.Zip_code }}" required><br>
+    <input name="zip_code" value="{{ pilot.Zip_code }}" required><br>
   <label>
     <input type="checkbox" name="long_haul"
            {% if pilot.Long_haul_qualified %}checked{% endif %}>

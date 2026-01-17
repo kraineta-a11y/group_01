@@ -370,7 +370,7 @@ def add_pilot():
         phone_number = request.form['phone_number']
         zip_code = request.form['zip_code']
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
         # create pilot id 
 
@@ -407,7 +407,7 @@ def add_steward():
         long_haul = 'long_haul' in request.form
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
         # create steward id
         cursor.execute("SELECT MAX(Employee_id) AS max_num FROM Steward")
