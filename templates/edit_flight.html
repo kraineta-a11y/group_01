@@ -19,7 +19,7 @@
 
     <label>Origin</label>
     <select name="origin" required>
-        {% for r in routes %}
+        {% for r in flight %}
             <option value="{{ r.Route_id }}"
               {% if r.Route_id == flight.Route_id %}selected{% endif %}>
               {{ r.Origin_airport }} → {{ r.Destination_airport }}
@@ -34,7 +34,7 @@
     <input type="time" required name="departure_time" value="{{ flight.Departure_time }}">
     <label>Plane ID</label>
     <select name="plane_id" required>
-        {% for p in planes %}
+        {% for p in flight %}
             <option value="{{ p.Plane_id }}"
               {% if p.Plane_id == flight.Plane_id %}selected{% endif %}>
               {{ p.Plane_id }}
@@ -42,7 +42,7 @@
         {% endfor %}
     </select>
     <label>Status</label>
-    <select name="status">
+    <select name="status" required>
         {% for s in ['ACTIVE', 'CANCELLED', 'DELAYED'] %}
             <option value="{{ s }}"
               {% if s == flight.Flight_status %}selected{% endif %}>
