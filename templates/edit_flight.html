@@ -21,7 +21,7 @@
                 value="{{ pilot.Employee_id }}"
                 {% if pilot.Employee_id in assigned_pilots %}checked{% endif %}
             >
-            {{ pilot.Name }}
+            {{ pilot.Hebrew_first_name }} {{ pilot.Hebrew_last_name }}
         </label>
         <br>
     {% endfor %}
@@ -35,7 +35,7 @@
                 value="{{ steward.Employee_id }}"
                 {% if steward.Employee_id in assigned_stewards %}checked{% endif %}
             >
-            {{ steward.Name }}
+            {{ steward.Hebrew_first_name }} {{ steward.Hebrew_last_name }}
         </label>
         <br>
     {% endfor %}
@@ -46,6 +46,10 @@
     <a href="{{ url_for('admin_flights') }}">Cancel</a>
 
 </form>
-
+{% if error %}
+  <div class="error-box">
+    {{ error }}
+  </div>
+{% endif %}
 </body>
 </html>
