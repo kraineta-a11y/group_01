@@ -1144,7 +1144,16 @@ def flight_view(flight_number):
 def passenger_count(flight_number):
     if request.method == 'POST':
         count = int(request.form['passenger_count'])
-        return redirect(url_for('passenger_details', flight_number=flight_number, count=count, role=get_user_role()))
+        # get user
+        email = session.get('client_email')
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT Passport_number, Birth_date FROM Registered_client WHERE Email = %s", (email,))
+        user = cursor.fetchone()
+        user['type'] = 'ADULT' if (datetime.now().date() - user['Birth_date']).days // 365 < 18 else 'CHILD'
+        cursor.close()
+        conn.close()
+        return redirect(url_for('passenger_details', flight_number=flight_number, count=count, role=get_user_role(), user=user))
 
     return render_template('passenger_count.html', flight_number=flight_number)
 
