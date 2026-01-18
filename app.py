@@ -1089,6 +1089,8 @@ def search():
                     Flight as f
                 JOIN
                     Flying_route as fr ON f.Route_id = fr.Route_id
+                JOIN
+                    Flight_pricing as fp ON f.Flight_number = fp.Flight_number AND f.Plane_id = fp.Plane_id
                 WHERE 
                     fr.Origin_airport = %s AND 
                     fr.Destination_airport = %s AND 
@@ -1104,6 +1106,8 @@ def search():
                         Flight as f
                     JOIN
                         Flying_route as fr ON f.Route_id = fr.Route_id
+                    JOIN
+                        Flight_pricing as fp ON f.Flight_number = fp.Flight_number AND f.Plane_id = fp.Plane_id
                     WHERE 
                         fr.Origin_airport = %s AND 
                         fr.Destination_airport = %s AND 
