@@ -1157,7 +1157,7 @@ def passenger_details(flight_number):
             email = session.get('client_email')
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT English_first_name, English_last_name, Passport_number, Birth_date FROM Registered_client WHERE Email = %s", (email,))
+            cursor.execute("SELECT Passport_number, Birth_date FROM Registered_client WHERE Email = %s", (email,))
             user = cursor.fetchone()
             user['type'] = 'ADULT' if (datetime.now().date() - user['Birth_date']).days // 365 < 18 else 'CHILD'
             cursor.close()
