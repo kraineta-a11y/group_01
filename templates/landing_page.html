@@ -17,7 +17,7 @@
 
   <label for="destination">To:</label>
   <input list="airports" name="destination" id="destination" required>
-  <input type="date" name="date" required>
+  <input type="date" name="date">
   <datalist id="airports">
     {% for a in airports %}
       <option value="{{ a.Airport_code }}"></option>
