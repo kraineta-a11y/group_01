@@ -1175,7 +1175,8 @@ def passenger_details(flight_number):
                 'passenger_details.html',
                 flight_number=flight_number,
                 count=count,
-                user=user
+                user=user,
+                role=get_user_role()
             )
     if request.method == 'POST':
         passengers = []
