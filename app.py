@@ -1079,10 +1079,11 @@ def search():
     date = request.args.get('date')
     print(f"Searching flights: {origin} → {destination} on {date}")
     #Sanity checks
-    if not origin or not destination or not date:
+    if not origin or not destination:
         return redirect(url_for('landing_page'))
     # Implementing search logic
-    query = """
+    if date:
+        query = """
                 SELECT * 
                 FROM 
                     Flight as f
@@ -1093,10 +1094,24 @@ def search():
                     fr.Destination_airport = %s AND 
                     f.Departure_date = %s AND
                     f.Flight_status = 'ACTIVE'
-                ORDER BY f.Departure_time
-            """ 
-    
-    cursor.execute(query, (origin, destination, date))
+                ORDER BY f.Departure_date, f.Departure_time
+            """
+        cursor.execute(query, (origin, destination, date))
+    else:
+        query = """
+                    SELECT * 
+                    FROM 
+                        Flight as f
+                    JOIN
+                        Flying_route as fr ON f.Route_id = fr.Route_id
+                    WHERE 
+                        fr.Origin_airport = %s AND 
+                        fr.Destination_airport = %s AND 
+                        f.Flight_status = 'ACTIVE'
+                    ORDER BY f.Departure_date, f.Departure_time
+                """ 
+        cursor.execute(query, (origin, destination))
+
     flights = cursor.fetchall()
     cursor.close()
     conn.close()
