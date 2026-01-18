@@ -293,16 +293,6 @@ def handle_crew_update(flight_number):
 
     return redirect(url_for('edit_flight', flight_number=flight_number))
 
-@application.route("/")
-def landing_page():
-    """Landing page route that redirects based on user role."""
-    role = get_user_role()
-
-    if role == 'manager':
-        return redirect(url_for('admin_dashboard'))
-
-    # Guests and registered clients see search
-    return render_template('landing_page.html', role=role)
 
 @application.route('/admin')
 def admin_dashboard():
@@ -969,6 +959,23 @@ def assign_crew():
         long_haul_required=long_haul_required,
         error=error
     )
+
+@application.route("/")
+def landing_page():
+    """Landing page route that redirects based on user role."""
+    role = get_user_role()
+
+    if role == 'manager':
+        return redirect(url_for('admin_dashboard'))
+    
+    # Load airport list for search dropdowns
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT Airport_code FROM Airport")
+    airports = cursor.fetchall()
+
+    # Guests and registered clients see search
+    return render_template('landing_page.html', role=role, airports=airports)
 
 @application.route('/login', methods=['GET', 'POST'])
 def login():
