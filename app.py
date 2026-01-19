@@ -1204,7 +1204,8 @@ def passenger_details(flight_number):
     )
 
 @application.route('/checkout/<int:flight_number>/passengers/seat_selection', methods=['GET', 'POST'])
-def seat_selection(flight_number,count):
+def seat_selection(flight_number):
+    count = int(request.args.get('count'))
     if request.method == 'POST':
         selected_seats = []
         for i in range(1, count + 1):
