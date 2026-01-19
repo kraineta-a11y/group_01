@@ -1372,7 +1372,7 @@ def passenger_details(flight_number):
         seats = cursor.fetchall()
         cursor.close()
         conn.close()
-        return redirect(url_for('seat_selection', flight_number=flight_number, count=count, seats=seats))
+        return redirect(url_for('seat_selection', flight_number=flight_number, count=count))
 
     return render_template(
         'passenger_details.html',
