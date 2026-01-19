@@ -1405,10 +1405,19 @@ def seat_selection(flight_number):
     cursor.close()
     conn.close()
 
+    from collections import defaultdict
+
+    seat_rows = defaultdict(list)
+    for seat in seats:
+        seat_rows[seat['Row_num']].append(seat)
+
+    seat_rows = dict(seat_rows)
+
+
     return render_template(
         'seat_selection.html',
         flight_number=flight_number,
-        seats=seats,
+        seats=seat_rows,
         count=count,
         role=get_user_role()
     )
