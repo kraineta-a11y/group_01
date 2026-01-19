@@ -869,24 +869,55 @@ def admin_create_flight():
         is_big_plane = plane_size == 'LARGE' # Determine plane size
         # Build Seating for the flight
 
-        
-        cursor.execute("SELECT first_row, last_row, first_col, last_col FROM Class WHERE Plane_id = %s AND Class_type = %s", (plane_id, 'ECONOMY'))
+        # ECONOMY
+        cursor.execute("""
+            SELECT first_row, last_row, first_col, last_col
+            FROM Class
+            WHERE Plane_id = %s AND Class_type = %s
+        """, (plane_id, 'ECONOMY'))
+
         economy_class = cursor.fetchone()
+
         for row in range(economy_class['first_row'], economy_class['last_row'] + 1):
-            for col in range(economy_class['first_col'], economy_class['last_col'] + 1):
+            for col_ord in range(
+                ord(economy_class['first_col']),
+                ord(economy_class['last_col']) + 1
+            ):
+                col = chr(col_ord)
                 cursor.execute(
-                    "INSERT INTO Seats_in_flight (Flight_number, Plane_id, Row_num, Col_num, Availability) VALUES (%s, %s, %s, %s, 1)",
+                    """
+                    INSERT INTO Seats_in_flight
+                    (Flight_number, Plane_id, Row_num, Col_num, Availability)
+                    VALUES (%s, %s, %s, %s, 1)
+                    """,
                     (flight_number, plane_id, row, col)
                 )
+
+        # BUSINESS (only for big planes)
         if is_big_plane:
-            cursor.execute("SELECT first_row, last_row, first_col, last_col FROM Class WHERE Plane_id = %s AND Class_type = %s", (plane_id, 'BUSINESS'))
+            cursor.execute("""
+                SELECT first_row, last_row, first_col, last_col
+                FROM Class
+                WHERE Plane_id = %s AND Class_type = %s
+            """, (plane_id, 'BUSINESS'))
+
             business_class = cursor.fetchone()
+
             for row in range(business_class['first_row'], business_class['last_row'] + 1):
-                for col in range(business_class['first_col'], business_class['last_col'] + 1):
+                for col_ord in range(
+                    ord(business_class['first_col']),
+                    ord(business_class['last_col']) + 1
+                ):
+                    col = chr(col_ord)
                     cursor.execute(
-                        "INSERT INTO Seats_in_flight (Flight_number, Plane_id, Row_num, Col_num, Availability) VALUES (%s, %s, %s, %s, 1)",
+                        """
+                        INSERT INTO Seats_in_flight
+                        (Flight_number, Plane_id, Row_num, Col_num, Availability)
+                        VALUES (%s, %s, %s, %s, 1)
+                        """,
                         (flight_number, plane_id, row, col)
                     )
+
         conn.commit()
         
         cursor.close()
