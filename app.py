@@ -733,10 +733,16 @@ def create_flight():
         "INSERT INTO Flight_pricing (Employee_id, Flight_number, Price, Class_type) VALUES (%s, %s, %s, 'ECONOMY')",
         (manager_id, flight_number, price)
     )
-
+    is_big_plane = is_long_haul_flight(flight_number) # Determine plane size
+    if is_big_plane:
+        business_price = float(price) * 1.5  # Business class is 50% more expensive; adjust as needed in edit flights
+        cursor.execute(
+            "INSERT INTO Flight_pricing (Employee_id, Flight_number, Price, Class_type) VALUES (%s, %s, %s, 'BUSINESS')",
+            (manager_id, flight_number, business_price)
+        )
     # Build Seating for the flight
 
-    is_big_plane = is_long_haul_flight(flight_number) # Determine plane size
+    
     cursor.execute("SELECT first_row, last_row, first_col, last_col FROM Class WHERE Plane_id = %s AND Class_type = %s", (plane_id, 'ECONOMY'))
     economy_class = cursor.fetchone()
     for row in range(economy_class['first_row'], economy_class['last_row'] + 1):
