@@ -1194,7 +1194,18 @@ def passenger_details(flight_number):
         # Disallow proceeding if all passengers are children
         if all(p['type'] == 'CHILD' for p in passengers):
             return "At least one adult passenger is required.", 400
-        return redirect(url_for('seat_selection', flight_number=flight_number, count=count))
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT Row_num, Col_num, Availability
+            FROM Seats_in_flight
+            WHERE Flight_number = %s
+            ORDER BY Row_num, Col_num
+        """, (flight_number,))
+        seats = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return redirect(url_for('seat_selection', flight_number=flight_number, count=count, seats=seats))
 
     return render_template(
         'passenger_details.html',
