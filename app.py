@@ -921,6 +921,13 @@ def admin_create_flight():
             VALUES (%s, %s, %s, %s, 'ECONOMY')
         """, (flight_number, plane_id, price, manager_id))
 
+        if plane_size == 'LARGE':
+            business_price = float(price) * 1.5  # Business class is 50% more expensive; adjust as needed in edit flights
+            cursor.execute("""
+                INSERT INTO Flight_pricing (Flight_number, Plane_id, Price, Employee_id, Class_type)
+                VALUES (%s, %s, %s, %s, 'BUSINESS')
+            """, (flight_number, plane_id, business_price, manager_id))
+
         conn.commit()
         cursor.close()
         conn.close()
