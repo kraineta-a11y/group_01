@@ -1489,6 +1489,9 @@ def order_summary(flight_number):
         col = s[-1]
         parsed_seats.append({"row": row, "col": col})
 
+    session['selected_seats'] = parsed_seats
+
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
