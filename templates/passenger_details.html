@@ -24,9 +24,9 @@
     <select name="type_{{ i }}">
       <option value="ADULT">Adult</option>
       <option value="CHILD">Child</option>
-      {{ if i == 1 }}
+      {% if i == 1 %}
         <input name="email" placeholder="Email" required>
-      {{ endif }}
+      {% endif %}
     </select>
   {% endif %}
 {% endfor %}
