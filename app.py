@@ -1584,8 +1584,7 @@ def confirm_booking(flight_number):
         INSERT INTO Booking (Flight_number, Email, Booking_number, Booking_date, Booking_status, Number_of_tickets, Passport_number)
         VALUES (%s, %s, %s, CURDATE(), 'ACTIVE', %s, %s)
     """, (flight_number, email, booking_number, len(passengers), passengers[0]['id']))
-    Booking_number = cursor.lastrowid
-
+    Booking_number = booking_number
     # Assign seats + mark unavailable
     for s in seats:
         cursor.execute("""
