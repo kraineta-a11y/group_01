@@ -1569,7 +1569,11 @@ def order_summary(flight_number):
               AND s.Row_num = %s
               AND s.Col_num = %s
         """, (flight_number, seat['row'], seat['col']))
-        price = cursor.fetchone()['Price']
+        row = cursor.fetchone()
+        if not row:
+            price = 0  # or error
+        else:
+            price = row['Price']        
         total_price += price
         seat_prices.append(price)
 
