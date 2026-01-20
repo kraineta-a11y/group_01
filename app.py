@@ -1545,7 +1545,8 @@ def order_summary(flight_number):
         seats=parsed_seats,
         seat_prices=seat_prices,
         total_price=total_price,
-        role=get_user_role()
+        role=get_user_role(),
+        flight_number=flight_number
     )
 
 @application.route('/checkout/<int:flight_number>/confirm', methods=['POST'])
