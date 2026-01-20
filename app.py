@@ -1578,7 +1578,7 @@ def confirm_booking(flight_number):
     booking_number = max_booking + 1 if max_booking else 1
     # Insert booking
     cursor.execute("""
-        INSERT INTO Booking (Flight_number, Email, Booking_number, Booking_date, Booking_status, Number_of_ticket, Passport_number)
+        INSERT INTO Booking (Flight_number, Email, Booking_number, Booking_date, Booking_status, Number_of_tickets, Passport_number)
         VALUES (%s, %s, %s, CURDATE(), 'ACTIVE', %s, %s)
     """, (flight_number, email, booking_number, len(passengers), passengers[0]['id']))
     Booking_number = cursor.lastrowid
