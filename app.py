@@ -1538,23 +1538,33 @@ def order_summary(flight_number):
     if not passengers or not seats:
         return "Session expired", 400
 
+    # parse seats
     parsed_seats = []
     for s in seats:
-        row = int(s[:-1])   # everything except last char
-        col = s[-1]         # last char
-        parsed_seats.append({'row': row, 'col': col})
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        row = int(s[:-1])
+        col = s[-1]
+        parsed_seats.append({"row": row, "col": col})
 
-    # Flight info
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Flight info + plane id
     cursor.execute("""
         SELECT f.Flight_number, f.Departure_date, f.Departure_time,
-               fr.Origin_airport, fr.Destination_airport
+               fr.Origin_airport, fr.Destination_airport,
+               f.Plane_id
         FROM Flight f
         JOIN Flying_route fr ON f.Route_id = fr.Route_id
         WHERE f.Flight_number = %s
     """, (flight_number,))
     flight = cursor.fetchone()
+
+    if not flight:
+        cursor.close()
+        conn.close()
+        return "Flight not found", 404
+
+    plane_id = flight['Plane_id']
 
     # Prices per seat
     total_price = 0
@@ -1562,18 +1572,19 @@ def order_summary(flight_number):
 
     for seat in parsed_seats:
         cursor.execute("""
-            SELECT Price
+            SELECT fp.Price
             FROM Flight_pricing fp
-            JOIN Seat s ON fp.Class_type = s.Class_type
+            JOIN Seat s 
+              ON fp.Class_type = s.Class_type
+             AND s.Plane_id = %s
+             AND s.Row_num = %s
+             AND s.Col_num = %s
             WHERE fp.Flight_number = %s
-              AND s.Row_num = %s
-              AND s.Col_num = %s
-        """, (flight_number, seat['row'], seat['col']))
+        """, (plane_id, seat['row'], seat['col'], flight_number))
+
         row = cursor.fetchone()
-        if not row:
-            price = 0  # or error
-        else:
-            price = row['Price']        
+        price = row['Price'] if row else 0
+
         total_price += price
         seat_prices.append(price)
 
