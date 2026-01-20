@@ -10,7 +10,7 @@
   <h3>Passenger {{ i }}</h3>
 
 <table border="1">
-  {% for row_num, row_seats in seat_rows.items() %}
+  {% for row_num, row_seats in seats.items() %}
     <tr>
       {% for seat in row_seats %}
         <td>
