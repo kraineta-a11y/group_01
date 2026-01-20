@@ -1573,13 +1573,14 @@ def confirm_booking(flight_number):
             )
     # generate booking number
     cursor.execute("SELECT MAX(Booking_number) FROM Booking")
-    booking_number = cursor.fetchone()[0] + 1 if cursor.fetchone()[0] else 1
+    max_booking = cursor.fetchone()[0]
+    booking_number = max_booking + 1 if max_booking else 1
     # Insert booking
     cursor.execute("""
         INSERT INTO Booking (Flight_number, Email, Booking_number, Booking_date, Booking_status, Number_of_ticket, Passport_number)
         VALUES (%s, %s, %s, CURDATE(), 'ACTIVE', %s, %s)
     """, (flight_number, email, booking_number, len(passengers), passengers[0]['id']))
-    booking_id = cursor.lastrowid
+    Booking_number = cursor.lastrowid
 
     # Assign seats + mark unavailable
     for s in seats:
@@ -1598,10 +1599,10 @@ def confirm_booking(flight_number):
     session.pop('passengers')
     session.pop('selected_seats')
 
-    return redirect(url_for('booking_success', booking_id=booking_id))
+    return redirect(url_for('booking_success', Booking_number=Booking_number))
 
-@application.route('/booking/success/<int:booking_id>')
-def booking_success(booking_id):
+@application.route('/booking/success/<int:Booking_number>')
+def booking_success(Booking_number):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -1613,7 +1614,7 @@ def booking_success(booking_id):
         JOIN Flight f ON b.Flight_number = f.Flight_number
         JOIN Flying_route fr ON f.Route_id = fr.Route_id
         WHERE b.Booking_number = %s
-    """, (booking_id,))
+    """, (Booking_number,))
     booking = cursor.fetchone()
 
     cursor.close()

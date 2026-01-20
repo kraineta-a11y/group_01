@@ -28,7 +28,7 @@
 <h3>Total Price</h3>
 <p>₪{{ total_price }}</p>
 
-<form method="POST">
+<form action="{{ url_for('confirm_booking', flight_number=flight_number) }}" method="POST">
   <button type="submit">Confirm Booking</button>
 </form>
 </body>
