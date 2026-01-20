@@ -1461,6 +1461,7 @@ def passenger_details(flight_number):
                 "name": request.form[f"name_{i}"],
                 "id": request.form[f"id_{i}"],
                 "type": request.form[f"type_{i}"],
+                "Email": request.form.get(f"email", None)
             })
 
         session['passengers'] = passengers
@@ -1537,8 +1538,13 @@ def order_summary(flight_number):
     if not passengers or not seats:
         return "Session expired", 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    parsed_seats = []
+    for s in seats:
+        row = int(s[:-1])   # everything except last char
+        col = s[-1]         # last char
+        parsed_seats.append({'row': row, 'col': col})
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
 
     # Flight info
     cursor.execute("""
@@ -1554,7 +1560,7 @@ def order_summary(flight_number):
     total_price = 0
     seat_prices = []
 
-    for seat in seats:
+    for seat in parsed_seats:
         cursor.execute("""
             SELECT Price
             FROM Flight_pricing fp
@@ -1577,7 +1583,7 @@ def order_summary(flight_number):
         'order_summary.html',
         flight=flight,
         passengers=passengers,
-        seats=seats,
+        seats=parsed_seats,
         seat_prices=seat_prices,
         total_price=total_price,
         role=get_user_role()
@@ -1592,18 +1598,29 @@ def confirm_booking(flight_number):
     cursor = conn.cursor()
 
     # Create booking
-    cursor.execute("""
-        INSERT INTO Booking (Flight_number, Email)
-        VALUES (%s, %s)
-    """, (flight_number, session.get('client_email')))
-    booking_id = cursor.lastrowid
+    if get_user_role() == 'client':
+        email = session.get('client_email')
+    else:
+        email = passengers[0]['Email']  # Use first passenger's email for guest bookings
 
-    # Insert passengers
-    for p in passengers:
-        cursor.execute("""
-            INSERT INTO Passenger (Booking_id, Name, Passport_number, Type)
-            VALUES (%s, %s, %s, %s)
-        """, (booking_id, p['name'], p['id'], p['type']))
+        # Enter into Client table if not exists
+        cursor.execute("SELECT 1 FROM Client WHERE Email = %s", (email,))
+        if not cursor.fetchone():
+            first_name = passengers[0]['name'].split()[0]
+            last_name = ' '.join(passengers[0]['name'].split()[1:]) if len(passengers[0]['name'].split()) > 1 else ''
+            cursor.execute(
+                "INSERT INTO Client (Email, English_first_name, English_last_name) VALUES (%s, %s, %s)",
+                (email, first_name, last_name)
+            )
+    # generate booking number
+    cursor.execute("SELECT MAX(Booking_number) FROM Booking")
+    booking_number = cursor.fetchone()[0] + 1 if cursor.fetchone()[0] else 1
+    # Insert booking
+    cursor.execute("""
+        INSERT INTO Booking (Flight_number, Email, Booking_number, Booking_date, Booking_status, Number_of_ticket, Passport_number)
+        VALUES (%s, %s, %s, CURDATE(), 'ACTIVE', %s, %s)
+    """, (flight_number, email, booking_number, len(passengers), passengers[0]['id']))
+    booking_id = cursor.lastrowid
 
     # Assign seats + mark unavailable
     for s in seats:
