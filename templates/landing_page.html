@@ -32,7 +32,7 @@
     <h2>Results</h2>
     <ul>
       {% for flight in flights %}
-      <a href="{{ url_for('flight_view', flight_number=flight['Flight_number']) }}"
+      <a href="{{ url_for('flight_view', flight_number=flight['Flight_number']) }}">
         <li>
           {{ flight.Origin_airport }} → {{ flight.Destination_airport }}
           | {{ flight.Departure_date }}
