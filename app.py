@@ -1090,12 +1090,13 @@ def admin_create_flight():
         if plane_id not in available_plane_ids:
             cursor.close()
             conn.close()
+            error = "No available planes for this flight."
             return render_template(
                 'create_flight.html',
                 origins=origins,
                 destinations=destinations,
                 planes=planes,
-                error="No available planes for this flight."
+                error=error
             )
 
         # Create flight- get flight number
