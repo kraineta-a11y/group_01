@@ -9,7 +9,7 @@
     <strong>Departing from: </strong> {{flight.Origin_airport}}<br>
     <strong>Departing time: </strong> {{flight.Departure_date}} {{flight.Departure_time}}<br>
     <strong>Landing at: </strong> {{flight.Destination_airport}}<br>
-    <strong>Landing time: </strong> {{flight.Duration}} <br>
+    <strong>Landing time: </strong> {{flight.Arrival_date}} {{flight.Arrival_time}} <br>
     <strong>Price: </strong> {{flight.Price}}<br>
     <strong>Class: </strong> {{flight.Class_type}}<br><br>
     <p>Not what you were looking for? <a href="{{ url_for('landing_page') }}">Back to home page</a></p>
