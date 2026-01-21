@@ -5,7 +5,7 @@ import random
 import os
 import mysql.connector as mdb
 from flask import url_for
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 
 
@@ -1048,9 +1048,14 @@ def admin_create_flight():
     
 
         # check plane availability
+        dep_time_raw = request.form['departure_time']
 
-        dep_time_td = departure_time
-        dep_time = (datetime.min + dep_time_td).time()
+        if isinstance(dep_time_raw, str):
+            dep_time = datetime.strptime(dep_time_raw, "%H:%M").time()
+        elif isinstance(dep_time_raw, timedelta):
+            dep_time = (datetime.min + dep_time_raw).time()
+        else:
+            dep_time = dep_time_raw  # already a datetime.time
 
         dep_dt = datetime.combine(
             departure_date,
