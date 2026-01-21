@@ -417,6 +417,57 @@ def admin_dashboard():
     conn.close()
     return render_template('admin_dashboard.html', flights=flights, pilots=pilots, stewards=stewards)
 
+# seat generation to insert seats into planes- intended to be used only once to fill in missing data, but wont break if used again. 
+
+@application.route('/admin/generate_all_seats')
+def admin_fix_existing_seats():
+    if get_user_role() != 'manager':
+        return "Forbidden", 403
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    updated_seats = 0
+
+    # 1. Get all planes
+    cursor.execute("SELECT Plane_id FROM Plane")
+    planes = cursor.fetchall()
+
+    for plane in planes:
+        plane_id = plane['Plane_id']
+
+        # 2. Get classes for plane
+        cursor.execute("""
+            SELECT Class_type, first_row, last_row, first_col, last_col
+            FROM Class
+            WHERE Plane_id = %s
+        """, (plane_id,))
+        classes = cursor.fetchall()
+
+        # 3. Update existing Seat table with correct class_type
+        for cls in classes:
+            class_type = cls['Class_type']
+
+            for row in range(cls['first_row'], cls['last_row'] + 1):
+                for col_ord in range(ord(cls['first_col']), ord(cls['last_col']) + 1):
+                    col = chr(col_ord)
+
+                    cursor.execute("""
+                        UPDATE Seat
+                        SET Class_type = %s
+                        WHERE Plane_id = %s
+                          AND Row_num = %s
+                          AND Col_num = %s
+                          AND (Class_type IS NULL OR Class_type != %s)
+                    """, (class_type, plane_id, row, col, class_type))
+
+                    updated_seats += cursor.rowcount
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return f"Done. Seats updated: {updated_seats}"
 # admin reports
 
 @application.route('/admin/reports')
@@ -1449,6 +1500,7 @@ def passenger_details(flight_number):
                 "name": request.form[f"name_{i}"],
                 "id": request.form[f"id_{i}"],
                 "type": request.form[f"type_{i}"],
+                "Email": request.form.get(f"email", None)
             })
 
         session['passengers'] = passengers
@@ -1484,7 +1536,7 @@ def seat_selection(flight_number):
         for i in range(1, count + 1):
             selected_seats.append(request.form[f"seat_{i}"])
         session['selected_seats'] = selected_seats
-        return redirect(url_for('payment', flight_number=flight_number))
+        return redirect(url_for('order_summary', flight_number=flight_number))
     
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -1516,6 +1568,284 @@ def seat_selection(flight_number):
         count=count,
         role=get_user_role()
     )
+
+@application.route('/checkout/<int:flight_number>/summary', methods=['GET', 'POST'])
+def order_summary(flight_number):
+    passengers = session.get('passengers')
+    seats = session.get('selected_seats')
+
+    if not passengers or not seats:
+        return "Session expired", 400
+
+    # parse seats
+    parsed_seats = []
+    for s in seats:
+        row = int(s[:-1])
+        col = s[-1]
+        parsed_seats.append({"row": row, "col": col})
+
+    session['selected_seats'] = parsed_seats
+
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Flight info + plane id
+    cursor.execute("""
+        SELECT f.Flight_number, f.Departure_date, f.Departure_time,
+               fr.Origin_airport, fr.Destination_airport,
+               f.Plane_id
+        FROM Flight f
+        JOIN Flying_route fr ON f.Route_id = fr.Route_id
+        WHERE f.Flight_number = %s
+    """, (flight_number,))
+    flight = cursor.fetchone()
+
+    if not flight:
+        cursor.close()
+        conn.close()
+        return "Flight not found", 404
+
+    plane_id = flight['Plane_id']
+
+    # Prices per seat
+    total_price = 0
+    seat_prices = []
+
+    for seat in parsed_seats:
+        cursor.execute("""
+            SELECT fp.Price
+            FROM Flight_pricing fp
+            JOIN Seat s 
+              ON fp.Class_type = s.Class_type
+             AND s.Plane_id = %s
+             AND s.Row_num = %s
+             AND s.Col_num = %s
+            WHERE fp.Flight_number = %s
+        """, (plane_id, seat['row'], seat['col'], flight_number))
+
+        row = cursor.fetchone()
+        price = row['Price'] if row else 0
+
+        total_price += price
+        seat_prices.append(price)
+
+    cursor.close()
+    conn.close()
+
+    if request.method == 'POST':
+        return redirect(url_for('confirm_booking', flight_number=flight_number))
+
+    return render_template(
+        'order_summary.html',
+        flight=flight,
+        passengers=passengers,
+        seats=parsed_seats,
+        seat_prices=seat_prices,
+        total_price=total_price,
+        role=get_user_role(),
+        flight_number=flight_number
+    )
+
+@application.route('/checkout/<int:flight_number>/confirm', methods=['POST'])
+def confirm_booking(flight_number):
+    passengers = session['passengers']
+    seats = session['selected_seats']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Create booking
+    if get_user_role() == 'client':
+        email = session.get('client_email')
+    else:
+        email = passengers[0]['Email']  # Use first passenger's email for guest bookings
+
+        # Enter into Client table if not exists
+        cursor.execute("SELECT 1 FROM Client WHERE Email = %s", (email,))
+        if not cursor.fetchone():
+            first_name = passengers[0]['name'].split()[0]
+            last_name = ' '.join(passengers[0]['name'].split()[1:]) if len(passengers[0]['name'].split()) > 1 else ''
+            cursor.execute(
+                "INSERT INTO Client (Email, English_first_name, English_last_name) VALUES (%s, %s, %s)",
+                (email, first_name, last_name)
+            )
+    # generate booking number
+    cursor.execute("SELECT MAX(Booking_number) FROM Booking")
+    max_booking = cursor.fetchone()[0]
+    booking_number = max_booking + 1 if max_booking else 1
+    # Insert booking
+    cursor.execute("""
+        INSERT INTO Booking (Flight_number, Email, Booking_number, Booking_date, Booking_status, Number_of_tickets, Passport_number)
+        VALUES (%s, %s, %s, CURDATE(), 'ACTIVE', %s, %s)
+    """, (flight_number, email, booking_number, len(passengers), passengers[0]['id']))
+    Booking_number = booking_number
+    # Assign seats + mark unavailable
+    for s in seats:
+        cursor.execute("""
+            UPDATE Seats_in_flight
+            SET Availability = 0
+            WHERE Flight_number = %s
+              AND Row_num = %s
+              AND Col_num = %s
+        """, (flight_number, s['row'], s['col']))
+        # Insert into Seats_in_order
+        cursor.execute("""
+            INSERT INTO Seats_in_order (Booking_number, Plane_id, Row_num, Col_num)
+            VALUES (%s,
+                (SELECT Plane_id FROM Flight WHERE Flight_number = %s),
+                %s, %s)
+        """, (Booking_number, flight_number, s['row'], s['col']))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    session.pop('passengers')
+    session.pop('selected_seats')
+
+    return redirect(url_for('booking_success', Booking_number=Booking_number))
+
+@application.route('/booking/success/<int:Booking_number>')
+def booking_success(Booking_number):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT b.Booking_number, f.Flight_number,
+               fr.Origin_airport, fr.Destination_airport,
+               f.Departure_date, f.Departure_time
+        FROM Booking b
+        JOIN Flight f ON b.Flight_number = f.Flight_number
+        JOIN Flying_route fr ON f.Route_id = fr.Route_id
+        WHERE b.Booking_number = %s
+    """, (Booking_number,))
+    booking = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not booking:
+        return "Booking not found", 404
+
+    return render_template(
+        'booking_success.html',
+        booking=booking,
+        role=get_user_role()
+    )
+
+# Manage bookings
+
+@application.route('/manage-booking', methods=['GET', 'POST'])
+def manage_booking():
+    if request.method == 'GET':
+        return render_template('manage_booking.html', role=get_user_role())
+
+    # POST
+    if get_user_role() == 'client':
+        email = session.get('client_email')
+        return redirect(url_for('manage_booking_result', method='registered', email=email))
+
+    # guest
+    booking_number = request.form['booking_number']
+    passport_number = request.form['passport_number']
+    return redirect(url_for('manage_booking_result',
+                            method='guest',
+                            booking_number=booking_number,
+                            passport_number=passport_number))
+
+@application.route('/manage-booking/result')
+def manage_booking_result():
+    method = request.args.get('method')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if method == 'registered':
+        email = request.args.get('email')
+        cursor.execute("""
+            SELECT *
+            FROM Booking
+            WHERE Email = %s
+            ORDER BY Booking_date DESC
+        """, (email,))
+        bookings = cursor.fetchall()
+
+    else:
+        booking_number = request.args.get('booking_number')
+        passport_number = request.args.get('passport_number')
+
+        cursor.execute("""
+            SELECT *
+            FROM Booking
+            WHERE Booking_number = %s
+              AND Passport_number = %s
+        """, (booking_number, passport_number))
+        bookings = cursor.fetchall()
+        if bookings is None:
+            return "No bookings found", 404
+        if bookings['Booking_status'] != 'ACTIVE':
+            return "Booking is not active", 400
+        
+
+    # load seats for each booking
+    for b in bookings:
+        cursor.execute("""
+            SELECT Row_num, Col_num
+            FROM Seats_in_order
+            WHERE Booking_number = %s
+        """, (b['Booking_number'],))
+        b['seats'] = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('manage_booking_result.html',
+                           bookings=bookings,
+                           role=get_user_role())
+
+@application.route('/manage-booking/cancel/<int:booking_number>', methods=['POST'])
+def cancel_booking(booking_number):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1) update booking status
+    cursor.execute("""
+        UPDATE Booking
+        SET Booking_status = 'CUSTOMER_CANCELLED'
+        WHERE Booking_number = %s
+    """, (booking_number,))
+
+    # 2) free seats
+    cursor.execute("""
+        SELECT Booking_number, Row_num, Col_num
+        FROM Seats_in_order
+        WHERE Booking_number = %s
+    """, (booking_number,))
+    seats = cursor.fetchall()
+
+    for s in seats:
+        cursor.execute("""
+            UPDATE Seats_in_flight
+            SET Availability = 1
+            WHERE Flight_number = %s
+              AND Row_num = %s
+              AND Col_num = %s
+        """, (s['Flight_number'], s['Row_num'], s['Col_num']))
+        # also update seats in order
+        cursor.execute("""
+            DELETE FROM Seats_in_order
+            WHERE Booking_number = %s
+              AND Row_num = %s
+              AND Col_num = %s
+        """, (booking_number, s['Row_num'], s['Col_num']))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for('manage_booking'))
 
 @application.errorhandler(404)
 def invalid_route(e):

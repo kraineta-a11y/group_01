@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FLYTAU ORDER SUMMARY</title>
+</head>
+<body>
+    <h1>Order Summary</h1>
+<h3>Flight</h3>
+<p>
+  {{ flight.Origin_airport }} → {{ flight.Destination_airport }}<br>
+  {{ flight.Departure_date }} at {{ flight.Departure_time }}
+</p>
+
+<h3>Passengers</h3>
+<ul>
+{% for p in passengers %}
+  <li>{{ p.name }} | ({{ p.type }}) | ({{ p.id }})</li>
+{% endfor %}
+</ul>
+
+<h3>Seats</h3>
+<ul>
+{% for s in seats %}
+  <li>Seat {{ s.row }}{{ s.col }}</li>
+{% endfor %}
+</ul>
+
+<h3>Total Price</h3>
+<p>₪{{ total_price }}</p>
+
+<form action="{{ url_for('confirm_booking', flight_number=flight_number) }}" method="POST">
+  <button type="submit">Confirm Booking</button>
+</form>
+</body>
+</html>

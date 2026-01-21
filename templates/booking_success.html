@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Confirmed</title>
+</head>
+<body>
+
+<h2>Booking Confirmed 🎉</h2>
+
+<p><strong>Booking number:</strong> {{ booking.Booking_number }}</p>
+
+<p>
+  {{ booking.Origin_airport }} → {{ booking.Destination_airport }}<br>
+  {{ booking.Departure_date }} at {{ booking.Departure_time }}
+</p>
+
+<a href="{{ url_for('landing_page') }}">Back to Home</a>
+
+</body>
+</html>

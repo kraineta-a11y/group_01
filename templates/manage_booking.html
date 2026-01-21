@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Booking</title>
+</head>
+<body>
+
+<h1>Manage Your Booking</h1>
+
+<form method="POST">
+  {% if role == 'client' %}
+    <button type="submit">View My Bookings</button>
+  {% else %}
+    Booking number: <input name="booking_number" required>
+    Passport: <input name="passport_number" required>
+    <button type="submit">View Booking</button>
+  {% endif %}
+</form>
+
+</body>
+</html>
