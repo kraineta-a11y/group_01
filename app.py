@@ -1437,11 +1437,13 @@ def flight_view(flight_number):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     query = """
-                SELECT f.* , fr.Origin_airport, fr.Destination_airport, fr.Duration
+                SELECT f.* , fr.Origin_airport, fr.Destination_airport, fr.Duration, fp.Price, fp.Class_type
                 FROM 
                     Flight as f
                 JOIN
                     Flying_route as fr ON f.Route_id = fr.Route_id
+                JOIN 
+                    Flight_pricing as fp ON f.Flight_number = fp.Flight_number AND f.Plane_id = fp.Plane_id
                 WHERE 
                     f.Flight_number = %s
             """

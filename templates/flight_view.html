@@ -4,13 +4,13 @@
     <title>FLYTAU Flight Details</title>
 </head>
 <body>
-    <h1>Flight Details</h1>
-    <strong>Flight Number </strong> {{ flight.Flight_number }}
-    <strong>Departing from: </strong> {{flight.Origin_airport}}
-    <p>Departing time: </p> {{flight.Departure_date}} {{flight.Departure_time}}
-    <strong>Landing at: </strong> {{flight.Destination_airport}}
-    <p>Landing time: </p> {{flight.Duration}} 
-    <strong>Price: </strong> {{flight.Price}}
+    <h1>Flight Details</h1><br>
+    <strong>Flight Number </strong> {{ flight.Flight_number }}<br>
+    <strong>Departing from: </strong> {{flight.Origin_airport}}<br>
+    <p>Departing time: </p> {{flight.Departure_date}} {{flight.Departure_time}}<br>
+    <strong>Landing at: </strong> {{flight.Destination_airport}}<br>
+    <p>Landing time: </p> {{flight.Duration}} <br>
+    <strong>Price: </strong> {{flight.Price}}<br>
     <p>Not what you were looking for? <a href="{{ url_for('landing_page') }}">Back to home page</a></p>
     {% if role == 'client' %}
         <form method="get" action="{{ url_for('passenger_count', flight_number=flight.Flight_number) }}">
