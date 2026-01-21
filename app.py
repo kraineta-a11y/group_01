@@ -1082,7 +1082,7 @@ def admin_create_flight():
                         + INTERVAL fr2.Duration MINUTE > %s
             )
         """
-        cursor.execute(query, (departure_date,arr_dt, dep_dt))
+        cursor.execute(query, (departure_date, dep_dt, arr_dt))
         results = cursor.fetchall()
 
         available_plane_ids = {r['Plane_id'] for r in results}
