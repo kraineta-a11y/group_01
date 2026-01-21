@@ -1082,7 +1082,7 @@ def admin_create_flight():
             )
         """
 
-        cursor.execute(query, (departure_date, dep_dt, arr_dt))
+        cursor.execute(query, (arr_dt, dep_dt))
         results = cursor.fetchall()
 
         available_plane_ids = {r['Plane_id'] for r in results}
