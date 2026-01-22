@@ -75,7 +75,7 @@
     <input type="hidden" name="action" value="update_crew">
 
     <!-- pilots -->
-     <strong>Pilots:</strong><br>
+     <div class="crew-section-title">Pilots</div>
     {% for pilot in pilots %}
         <label>
             <input type="checkbox" name="pilots"
@@ -86,7 +86,7 @@
     {% endfor %}
 
     <!-- stewards -->
-    <strong>Stewards:</strong><br>
+    <div class="crew-section-title">Stewards</div>
     {% for steward in stewards %}
         <label>
             <input type="checkbox" name="stewards"
