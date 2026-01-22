@@ -1,4 +1,4 @@
-USE flytau;
+
 
 SELECT AVG(t.occupancy_pct) AS avg_occupancy_pct
 FROM (
