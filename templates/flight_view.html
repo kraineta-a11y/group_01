@@ -11,14 +11,18 @@
     <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
   </a>
 </div>
-    <h1>Flight Details</h1><br>
-    <strong>Flight Number </strong> {{ flight.Flight_number }}<br>
-    <strong>Departing from: </strong> {{flight.Origin_airport}}<br>
-    <strong>Departing time: </strong> {{flight.Departure_date}} {{flight.Departure_time}}<br>
-    <strong>Landing at: </strong> {{flight.Destination_airport}}<br>
-    <strong>Landing time: </strong> {{flight.Arrival_time}} <br>
-    <strong>Price: </strong> {{flight.Price}}<br>
-    <strong>Class: </strong> {{flight.Class_type}}<br><br>
+    <div class="info-card">
+  <h1>Flight Details</h1>
+
+  <p><strong>Flight Number:</strong> {{ flight.Flight_number }}</p>
+  <p><strong>Departing from:</strong> {{ flight.Origin_airport }}</p>
+  <p><strong>Departing time:</strong> {{ flight.Departure_date }} {{ flight.Departure_time }}</p>
+  <p><strong>Landing at:</strong> {{ flight.Destination_airport }}</p>
+  <p><strong>Landing time:</strong> {{ flight.Arrival_time }}</p>
+  <p><strong>Price:</strong> {{ flight.Price }}</p>
+  <p><strong>Class:</strong> {{ flight.Class_type }}</p>
+</div>
+
     <p>Not what you were looking for? <a href="{{ url_for('landing_page') }}">Back to home page</a></p>
     {% if role == 'client' %}
         <form method="get" action="{{ url_for('passenger_count', flight_number=flight.Flight_number) }}">
