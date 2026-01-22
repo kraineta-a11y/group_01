@@ -74,27 +74,28 @@
 <form method="POST">
     <input type="hidden" name="action" value="update_crew">
 
-    <!-- pilots -->
-     <div class="crew-section-title">Pilots</div>
-    {% for pilot in pilots %}
-        <label>
-            <input type="checkbox" name="pilots"
-                   value="{{ pilot.Employee_id }}"
-                   {% if pilot.Employee_id in assigned_pilots %}checked{% endif %}>
-            {{ pilot.Hebrew_first_name }} {{ pilot.Hebrew_last_name }}
-        </label><br>
-    {% endfor %}
+   <!-- pilots -->
+<div class="crew-section-title">Pilots</div>
+{% for pilot in pilots %}
+  <label class="crew-item">
+    <input type="checkbox" name="pilots"
+           value="{{ pilot.Employee_id }}"
+           {% if pilot.Employee_id in assigned_pilots %}checked{% endif %}>
+    <span class="crew-name">{{ pilot.Hebrew_first_name }} {{ pilot.Hebrew_last_name }}</span>
+  </label>
+{% endfor %}
 
-    <!-- stewards -->
-    <div class="crew-section-title">Stewards</div>
-    {% for steward in stewards %}
-        <label>
-            <input type="checkbox" name="stewards"
-                   value="{{ steward.Employee_id }}"
-                   {% if steward.Employee_id in assigned_stewards %}checked{% endif %}>
-            {{ steward.Hebrew_first_name }} {{ steward.Hebrew_last_name }}
-        </label><br>
-    {% endfor %}
+<!-- stewards -->
+<div class="crew-section-title">Stewards</div>
+{% for steward in stewards %}
+  <label class="crew-item">
+    <input type="checkbox" name="stewards"
+           value="{{ steward.Employee_id }}"
+           {% if steward.Employee_id in assigned_stewards %}checked{% endif %}>
+    <span class="crew-name">{{ steward.Hebrew_first_name }} {{ steward.Hebrew_last_name }}</span>
+  </label>
+{% endfor %}
+
 
     <button type="submit">Save crew</button>
 </form>
