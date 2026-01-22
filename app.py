@@ -1278,7 +1278,8 @@ def assign_crew():
 
     if request.method == 'POST':
         action = request.form.get('action')
-
+        flight_number = request.form.get('flight_number')
+        
         # --------- DELETE FLOW ----------
         if action == 'delete':
             cursor.execute("DELETE FROM Seats_in_flight WHERE Flight_number=%s", (flight_number,))
