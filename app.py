@@ -1901,12 +1901,13 @@ def manage_booking_result():
             FROM Seats_in_order s
             JOIN Flight f ON f.Flight_number = %s
             JOIN Flying_route fr ON f.Route_id = fr.Route_id
-            JOIN Seat st ON st.Plane_id = f.Plane_id
-                         AND st.Row_num = s.Row_num
-                         AND st.Col_num = s.Col_num
+            JOIN Seat st ON st.Plane_id = s.Plane_id
+                     AND st.Row_num = s.Row_num
+                     AND st.Col_num = s.Col_num
             JOIN Flight_pricing fp
                 ON fp.Flight_number = f.Flight_number
                AND fp.Class_type = st.Class_type
+               AND fp.Plane_id = f.Plane_id
             WHERE s.Booking_number = %s
         """, (b['Flight_number'], b['Booking_number']))
         prices = cursor.fetchall()
