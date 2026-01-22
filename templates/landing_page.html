@@ -33,6 +33,10 @@
 
   <button type="submit">Search</button>
 </form>
+    <div class="post-results-actions">
+  <a href="{{ url_for('manage_bookings') }}">Manage Bookings</a>
+</div>
+
 {% if flights is defined %}
   {% if flights %}
     <h2>Results</h2>
