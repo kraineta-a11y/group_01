@@ -726,4 +726,20 @@ form input[type="submit"] + p{
   .post-results-actions a{ width: 100%; }
 }
 
+.post-results-actions a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-weight: 900;
+  color: #07122b;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 18px 30px rgba(47,107,255,.18);
+  border-bottom: none;
+}
+.post-results-actions a:hover{ filter: brightness(1.05); }
+.post-results-actions a:active{ transform: translateY(1px); }
+
 
