@@ -1528,7 +1528,7 @@ def flight_view(flight_number):
                     f.Flight_number = %s
             """
     cursor.execute(query, (flight_number,))
-    flights = cursor.fetchone()
+    flights = cursor.fetchall()
 
     # calculate arrival time
     dep_time_td = flights['Departure_time']   # timedelta
@@ -1915,7 +1915,6 @@ def manage_booking_result():
         if not prices:
             b['flight_info'] = None
             b['seat_prices'] = []
-            b['error'] = "No seat pricing information found."
         else:
             b['flight_info'] = {
                 'Departure_date': prices[0]['Departure_date'],
