@@ -1932,7 +1932,7 @@ def manage_booking_result():
                     fr.Origin_airport, fr.Destination_airport, fp.Price
                 FROM Flight f
                 JOIN Flying_route fr ON f.Route_id = fr.Route_id
-                JOIN Flight_Pricing fp on f.Flight_number = fp.Flight_number
+                JOIN Flight_pricing fp on f.Flight_number = fp.Flight_number
                 WHERE f.Flight_number = %s
             """, (b['Flight_number'],))
             flight = cursor.fetchone()
