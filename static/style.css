@@ -626,4 +626,26 @@ p.note{
   margin-right: auto;
 }
 
+/* Fix NOTE under submit/cancel button: make it plain text (no card look) */
+form button + p,
+form input[type="submit"] + p{
+  width: var(--narrow) !important;
+  margin: 10px auto 0 !important;
+
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+
+  color: rgba(234,242,255,.78) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  text-align: center !important;
+
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
 
