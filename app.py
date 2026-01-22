@@ -1843,12 +1843,18 @@ def manage_booking_result():
             WHERE s.Booking_number = %s
         """, (b['Flight_number'], b['Booking_number']))
         prices = cursor.fetchall()
-        b['flight_info'] = {
-            'Departure_date': prices[0]['Departure_date'],
-            'Departure_time': prices[0]['Departure_time'],
-            'Origin_airport': prices[0]['Origin_airport'],
-            'Destination_airport': prices[0]['Destination_airport']
-        }
+        if not prices:
+            b['flight_info'] = None
+            b['seat_prices'] = []
+        else:
+            b['flight_info'] = {
+                'Departure_date': prices[0]['Departure_date'],
+                'Departure_time': prices[0]['Departure_time'],
+                'Origin_airport': prices[0]['Origin_airport'],
+                'Destination_airport': prices[0]['Destination_airport']
+            }
+            b['seat_prices'] = prices
+
         total_price = sum(p['Price'] for p in prices)
 
         # refund logic (unchanged semantics)
