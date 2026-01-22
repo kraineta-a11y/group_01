@@ -2,6 +2,8 @@
 <html>
 <head>
     <title>FLYTAU Check Out</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
 </head>
 <body>
     <form method="POST" action="{{ url_for('passenger_count', flight_number=flight_number) }}">
