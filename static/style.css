@@ -597,4 +597,33 @@ form,
 p{
   overflow: hidden;
 }
+/* NOTE: no border/background/box around the note text */
+.note,
+form .note,
+form small.note,
+form small,
+p.note,
+label.note{
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-top: 10px;
+  color: rgba(234,242,255,.78);
+  font-size: 13px;
+  line-height: 1.5;
+
+  /* wrap long lines */
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* If NOTE is inside a paragraph, don't give it the "card" look */
+p.note{
+  width: var(--narrow) !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 
