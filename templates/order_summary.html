@@ -31,5 +31,9 @@
 <form action="{{ url_for('confirm_booking', flight_number=flight_number) }}" method="POST">
   <button type="submit">Confirm Booking</button>
 </form>
+<br>
+<form method="GET" action="{{ url_for('landing_page') }}">
+  <button type="submit">Back to Home Page</button>  
+</form>
 </body>
 </html>

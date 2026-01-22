@@ -48,5 +48,8 @@
     {{ error }}
   </div>
 {% endif %}
+<form method="GET" action="{{ url_for('admin_dashboard') }}">
+  <button type="submit">Back to Admin</button>  
+</form>
 </body>
 </html>

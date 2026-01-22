@@ -26,5 +26,9 @@
         <input type="number" name="num_seats" min="1" max="350" required>
         <button type="submit">Continue to classes and seats</button>
     </form>
+
+<form method="GET" action="{{ url_for('admin_dashboard') }}">
+  <button type="submit">Back to Admin</button>  
+</form>
 </body>
 </html>
