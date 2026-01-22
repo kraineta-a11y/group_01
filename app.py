@@ -6,6 +6,7 @@ import os
 import mysql.connector as mdb
 from flask import url_for
 from datetime import datetime, timedelta, time
+from decimal import Decimal
 
 
 
@@ -1940,7 +1941,7 @@ def manage_booking_result():
             total_price = flight['Price']
         # refund logic (unchanged semantics)
         if b['Booking_status'] == 'CUSTOMER_CANCELLED':
-            b['refund'] = total_price * 0.05
+            b['refund'] = total_price * Decimal(0.05)
         elif b['Booking_status'] == 'SYSTEM_CANCELLED':
             b['refund'] = total_price
         else:
