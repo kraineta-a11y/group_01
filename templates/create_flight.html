@@ -6,17 +6,11 @@
 
 </head>
 <body>
-        <header class="flytau-header">
-  <div class="flytau-header__inner">
-    <a class="flytau-brand" href="{{ url_for('landing_page') }}">
-      <img class="flytau-brand__logo" src="{{ url_for('static', filename='logo.png') }}" alt="FLYTAU logo">
-      <div>
-        <div class="flytau-brand__name">FLYTAU</div>
-        <div class="flytau-brand__tagline">Find. Book. Fly.</div>
-      </div>
-    </a>
-  </div>
-</header>
+<div class="corner-logo">
+  <a href="{{ url_for('landing_page') }}">
+    <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
+  </a>
+</div>
     <h1>Create Flight</h1>
 
 <form method="post">
