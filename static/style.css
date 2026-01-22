@@ -47,9 +47,13 @@ body{
 }
 
 /* Stars overlay */
+body{
+  position: relative; /* להוסיף */
+}
+
 body::before{
   content:"";
-  position: fixed;
+  position: absolute;  /* במקום fixed */
   inset: 0;
   pointer-events: none;
   opacity: .22;
@@ -61,6 +65,8 @@ body::before{
     radial-gradient(circle at 90% 60%, #fff 1px, transparent 2px);
   background-size: 240px 240px;
   filter: blur(.2px);
+}
+
 }
 
 /* Basic typography */
@@ -682,3 +688,4 @@ p:where(:not(.error-box)){
   border: 1px solid rgba(234,242,255,.22);
   box-shadow: 0 14px 28px rgba(0,0,0,.35);
 }
+
