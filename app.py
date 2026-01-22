@@ -1898,10 +1898,16 @@ def cancel_booking(booking_number):
         conn.close()
         return "Booking not found", 404
 
-    dep_dt = datetime.combine(
-        row['Departure_date'],
-        row['Departure_time']
-    )
+    dep_date = row['Departure_date']
+    dep_time_raw = row['Departure_time']
+
+    if isinstance(dep_time_raw, timedelta):
+        dep_time = (datetime.min + dep_time_raw).time()
+    else:
+        dep_time = dep_time_raw  # already a datetime.time
+
+    dep_dt = datetime.combine(dep_date, dep_time)
+
     now = datetime.now()
 
     if (dep_dt - now).total_seconds() < 36 * 3600:
