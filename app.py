@@ -1270,6 +1270,9 @@ def admin_create_flight():
 def assign_crew():
     error = None
 
+            
+    conn = get_db_connection()
+    cursor = conn.cursor()
     if get_user_role() != 'manager':
         return "Forbidden", 403
 
@@ -1292,9 +1295,7 @@ def assign_crew():
         stewards = request.form.getlist('stewards')
 
         long_haul_required = is_long_haul_flight(flight_number)
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
+
 
         # checking long haul requirements are met
         if long_haul_required:
