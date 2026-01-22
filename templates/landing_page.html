@@ -29,6 +29,9 @@
 <form method="POST" action="{{ url_for('manage_booking') }}">
   <button type="submit">manage-booking</button>
 </form>
+<form method="POST" action="{{ url_for('logout') }}">
+  <button type="submit">Log Out</button>
+</form>
 {% if flights is defined %}
   {% if flights %}
     <h2>Results</h2>
