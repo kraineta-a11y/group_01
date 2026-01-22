@@ -1822,8 +1822,8 @@ def manage_booking():
         return redirect(url_for('manage_booking_result', method='registered', email=email))
 
     # guest
-    booking_number = request.form['booking_number']
-    passport_number = request.form['passport_number']
+    booking_number = request.form.get('booking_number')
+    passport_number = request.form.get('passport_number')
     return redirect(url_for('manage_booking_result',
                             method='guest',
                             booking_number=booking_number,
