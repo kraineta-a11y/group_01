@@ -65,8 +65,11 @@ def time_handle_normalize(departure_time):
             dep_time = datetime.strptime(departure_time, "%H:%M").time()
         except ValueError:
             dep_time = datetime.strptime(departure_time, "%H:%M:%S").time()
+    elif isinstance(departure_time, timedelta):
+        dep_time = (datetime.min + departure_time).time()
     else:
-        dep_time = departure_time  # already a time object
+        dep_time = departure_time  # already a datetime.time
+
     return dep_time
 
 def update_flight_status(flight_number):
@@ -93,8 +96,10 @@ def update_flight_status(flight_number):
             dep_time = datetime.strptime(dep_time_raw, "%H:%M").time()
         except ValueError:
             dep_time = datetime.strptime(dep_time_raw, "%H:%M:%S").time()
+    elif isinstance(dep_time_raw, timedelta):
+        dep_time = (datetime.min + dep_time_raw).time()
     else:
-        dep_time = dep_time_raw  # already a time object
+        dep_time = dep_time_raw  # already a datetime.time
 
     dep_dt = datetime.combine(flight['Departure_date'], dep_time)
     arr_dt = dep_dt + timedelta(minutes=flight['Duration'])
