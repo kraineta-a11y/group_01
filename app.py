@@ -253,44 +253,90 @@ def build_edit_flight_context(flight_number, error=None):
 # flight and crew management helpers
 
 def handle_flight_update(flight_number):
+    # ---- Parse form inputs ----
     route_id = request.form['route']
-    date = request.form['departure_date']
-    time = request.form['departure_time']
-    status = request.form['status'] 
-    economy_price = request.form['economy_price']
-    business_price = request.form['business_price'] if 'business_price' in request.form else None
+    status = request.form['status']
+    economy_price = float(request.form['economy_price'])
+    business_price = (
+        float(request.form['business_price'])
+        if 'business_price' in request.form and request.form['business_price']
+        else None
+    )
+
+    departure_date = datetime.strptime(
+        request.form['departure_date'], "%Y-%m-%d"
+    ).date()
+
+    departure_time = datetime.strptime(
+        request.form['departure_time'], "%H:%M"
+    ).time()
+
+    dep_dt = datetime.combine(departure_date, departure_time)
+    now = datetime.now()
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        UPDATE Flight
-        SET Route_id = %s,
-            Departure_date = %s,
-            Departure_time = %s,
-            Flight_status = %s
-        WHERE Flight_number = %s
-    """, (route_id, date, time, status, flight_number))
+    try:
+        # ---- Cancellation policy ----
+        if status == 'SYSTEM_CANCELLED':
+            if (dep_dt - now).total_seconds() < 72 * 3600:
+                return "Cannot cancel flight within 72 hours of departure."
 
-    # Update pricing
-    cursor.execute("""
-        UPDATE Flight_pricing
-        SET Price = %s
-        WHERE Flight_number = %s AND Class_type = 'ECONOMY'
-    """, (economy_price, flight_number))
+            # Cancel active bookings
+            cursor.execute("""
+                UPDATE Booking
+                SET Booking_status = 'CUSTOMER_CANCELLED'
+                WHERE Flight_number = %s
+                  AND Booking_status = 'ACTIVE'
+            """, (flight_number,))
 
-    if business_price is not None:
+            # Zero prices
+            economy_price = 0
+            if business_price is not None:
+                business_price = 0
+
+        # ---- Update flight ----
+        cursor.execute("""
+            UPDATE Flight
+            SET Route_id = %s,
+                Departure_date = %s,
+                Departure_time = %s,
+                Flight_status = %s
+            WHERE Flight_number = %s
+        """, (
+            route_id,
+            departure_date,
+            departure_time,
+            status,
+            flight_number
+        ))
+
+        # ---- Update economy price ----
         cursor.execute("""
             UPDATE Flight_pricing
             SET Price = %s
-            WHERE Flight_number = %s AND Class_type = 'BUSINESS'
-        """, (business_price, flight_number))
+            WHERE Flight_number = %s
+              AND Class_type = 'ECONOMY'
+        """, (economy_price, flight_number))
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+        # ---- Update business price if applicable ----
+        if business_price is not None:
+            cursor.execute("""
+                UPDATE Flight_pricing
+                SET Price = %s
+                WHERE Flight_number = %s
+                  AND Class_type = 'BUSINESS'
+            """, (business_price, flight_number))
+
+        conn.commit()
+
+    finally:
+        cursor.close()
+        conn.close()
 
     return redirect(url_for('edit_flight', flight_number=flight_number))
+
 
 def handle_crew_update(flight_number):
     pilot_ids = request.form.getlist('pilots')
@@ -925,6 +971,7 @@ def delete_steward(steward_id):
 
     return redirect(url_for('employees'))
 
+# view and manage flights 
 
 @application.route('/admin/flights', methods=['GET'])
 def admin_flights(): # View and manage flights
@@ -1754,7 +1801,6 @@ def manage_booking_result():
             ORDER BY Booking_date DESC
         """, (email,))
         bookings = cursor.fetchall()
-
     else:
         booking_number = request.args.get('booking_number')
         passport_number = request.args.get('passport_number')
@@ -1766,13 +1812,13 @@ def manage_booking_result():
               AND Passport_number = %s
         """, (booking_number, passport_number))
         bookings = cursor.fetchall()
-        if bookings is None:
-            return "No bookings found", 404
-        if bookings['Booking_status'] != 'ACTIVE':
-            return "Booking is not active", 400
-        
 
-    # load seats for each booking
+    if not bookings:
+        cursor.close()
+        conn.close()
+        return "No bookings found", 404
+
+    # load seats
     for b in bookings:
         cursor.execute("""
             SELECT Row_num, Col_num
@@ -1781,29 +1827,88 @@ def manage_booking_result():
         """, (b['Booking_number'],))
         b['seats'] = cursor.fetchall()
 
+    # load seat prices
+    for b in bookings:
+        cursor.execute("""
+            SELECT fp.Price
+            FROM Seats_in_order s
+            JOIN Flight f ON f.Flight_number = %s
+            JOIN Seat st ON st.Plane_id = f.Plane_id
+                         AND st.Row_num = s.Row_num
+                         AND st.Col_num = s.Col_num
+            JOIN Flight_pricing fp
+                ON fp.Flight_number = f.Flight_number
+               AND fp.Class_type = st.Class_type
+            WHERE s.Booking_number = %s
+        """, (b['Flight_number'], b['Booking_number']))
+        prices = cursor.fetchall()
+
+        total_price = sum(p['Price'] for p in prices)
+
+        # refund logic (unchanged semantics)
+        if b['Booking_status'] == 'CUSTOMER_CANCELLED':
+            b['refund'] = total_price * 0.05
+        elif b['Booking_status'] == 'SYSTEM_CANCELLED':
+            b['refund'] = total_price
+        else:
+            b['refund'] = 0
+
+        b['total_price'] = total_price
+
     cursor.close()
     conn.close()
 
-    return render_template('manage_booking_result.html',
-                           bookings=bookings,
-                           role=get_user_role())
+    return render_template(
+        'manage_booking_result.html',
+        bookings=bookings,
+        role=get_user_role()
+    )
+
 
 @application.route('/manage-booking/cancel/<int:booking_number>', methods=['POST'])
 def cancel_booking(booking_number):
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
-    # 1) update booking status
+    cursor.execute("""
+        SELECT b.Flight_number,
+               f.Departure_date,
+               f.Departure_time
+        FROM Booking b
+        JOIN Flight f ON b.Flight_number = f.Flight_number
+        WHERE b.Booking_number = %s
+    """, (booking_number,))
+    row = cursor.fetchone()
+
+    if not row:
+        cursor.close()
+        conn.close()
+        return "Booking not found", 404
+
+    dep_dt = datetime.combine(
+        row['Departure_date'],
+        row['Departure_time']
+    )
+    now = datetime.now()
+
+    if (dep_dt - now).total_seconds() < 36 * 3600:
+        cursor.close()
+        conn.close()
+        return "Cannot cancel flight within 36 hours of departure."
+
+    flight_number = row['Flight_number']
+
+    # cancel booking
     cursor.execute("""
         UPDATE Booking
         SET Booking_status = 'CUSTOMER_CANCELLED'
         WHERE Booking_number = %s
     """, (booking_number,))
 
-    # 2) free seats
+    # free seats
     cursor.execute("""
-        SELECT Booking_number, Row_num, Col_num
+        SELECT Row_num, Col_num
         FROM Seats_in_order
         WHERE Booking_number = %s
     """, (booking_number,))
@@ -1816,20 +1921,19 @@ def cancel_booking(booking_number):
             WHERE Flight_number = %s
               AND Row_num = %s
               AND Col_num = %s
-        """, (s['Flight_number'], s['Row_num'], s['Col_num']))
-        # also update seats in order
-        cursor.execute("""
-            DELETE FROM Seats_in_order
-            WHERE Booking_number = %s
-              AND Row_num = %s
-              AND Col_num = %s
-        """, (booking_number, s['Row_num'], s['Col_num']))
+        """, (flight_number, s['Row_num'], s['Col_num']))
+
+    cursor.execute("""
+        DELETE FROM Seats_in_order
+        WHERE Booking_number = %s
+    """, (booking_number,))
 
     conn.commit()
     cursor.close()
     conn.close()
 
     return redirect(url_for('manage_booking'))
+
 
 @application.errorhandler(404)
 def invalid_route(e):
