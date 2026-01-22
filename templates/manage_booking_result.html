@@ -16,12 +16,19 @@
 {% for b in bookings %}
   <h3>Booking #{{ b.Booking_number }} ({{ b.Booking_status }})</h3>
   <p>Flight: {{ b.Flight_number }}</p>
-  <p>Flight Details: {{ b.flight_info.Departure_date }} at {{ b.flight_info.Departure_time }} from {{ b.flight_info.Origin_airport }} to {{ b.flight_info.Destination_airport }}</p>
+  {% if b.flight_info %}
+    <p>Flight Details: {{ b.flight_info.Departure_date }} at {{ b.flight_info.Departure_time }}
+      from {{ b.flight_info.Origin_airport }} to {{ b.flight_info.Destination_airport }}</p>
+  {% else %}
+    <p>Flight Details: N/A</p>
+  {% endif %}  
   <p>Seats:
     {% for s in b.seats %}
       {{ s.Row_num }}{{ s.Col_num }}
   </p>
   <p>Price: {{ b.total_price }}</p>
+  <br>
+  <p>Refund: {{ b.refund }} </p>
     {% endfor %}
   
 
