@@ -1,0 +1,660 @@
+/* =========================================================
+   FLYTAU — Unified UI (Home / Auth / Admin / Tables / Forms)
+   Covers: landing, login, register, flight details, checkout,
+           seats, admin dashboard, create/edit flight, crew assign,
+           employees, add/edit pilot/steward, reports/tables.
+   ========================================================= */
+
+:root{
+  --bg1:#07122b;
+  --bg2:#0a4ad8;
+
+  --card:rgba(255,255,255,.10);
+  --card2:rgba(255,255,255,.06);
+
+  --text:#eaf2ff;
+  --muted:rgba(234,242,255,.75);
+
+  --line:rgba(234,242,255,.18);
+
+  --accent:#2f6bff;
+  --accent2:#27d7ff;
+
+  --shadow: 0 18px 55px rgba(0,0,0,.40);
+  --radius:20px;
+  --radius2:14px;
+
+  --container: min(1100px, 96vw);
+  --narrow: min(560px, 92vw);
+}
+
+*{ box-sizing:border-box; }
+
+html, body{ height:100%; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  padding: 22px 18px 60px;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+
+  background:
+    radial-gradient(1100px 700px at 22% 10%, rgba(39,215,255,.18), transparent 62%),
+    radial-gradient(950px 650px at 82% 20%, rgba(47,107,255,.34), transparent 58%),
+    radial-gradient(900px 650px at 50% 92%, rgba(47,107,255,.20), transparent 60%),
+    linear-gradient(180deg, var(--bg1), var(--bg2));
+}
+
+/* Stars overlay */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .22;
+  background-image:
+    radial-gradient(circle at 10% 20%, #fff 1px, transparent 2px),
+    radial-gradient(circle at 35% 55%, #fff 1px, transparent 2px),
+    radial-gradient(circle at 75% 30%, #fff 1px, transparent 2px),
+    radial-gradient(circle at 65% 78%, #fff 1px, transparent 2px),
+    radial-gradient(circle at 90% 60%, #fff 1px, transparent 2px);
+  background-size: 240px 240px;
+  filter: blur(.2px);
+}
+
+/* Basic typography */
+h1, h2, h3{
+  width: var(--container);
+  margin: 22px auto 12px;
+  letter-spacing: .2px;
+}
+h1{ font-size: 34px; }
+h2{ font-size: 22px; color: rgba(234,242,255,.92); }
+h3{ font-size: 18px; color: rgba(234,242,255,.88); }
+
+strong{
+  color: rgba(234,242,255,.95);
+  font-weight: 900;
+}
+
+hr{
+  width: var(--container);
+  margin: 18px auto;
+  border: 0;
+  height: 1px;
+  background: rgba(234,242,255,.14);
+}
+
+/* Links default */
+a{
+  color: var(--text);
+  text-decoration:none;
+  border-bottom: 1px solid rgba(234,242,255,.28);
+}
+a:hover{ border-bottom-color: rgba(39,215,255,.70); }
+
+/* =========================================================
+   Header (optional — only applies if you include the header HTML)
+   ========================================================= */
+
+.flytau-header{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 14px 0;
+  backdrop-filter: blur(12px);
+}
+
+.flytau-header__inner{
+  width: var(--container);
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--card), var(--card2));
+  box-shadow: 0 16px 40px rgba(0,0,0,.35);
+  padding: 12px 14px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 14px;
+}
+
+.flytau-brand{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  text-decoration:none;
+  color: var(--text);
+  min-width: 220px;
+  border-bottom: none;
+}
+
+.flytau-brand__logo{
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 14px;
+  padding: 6px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(234,242,255,.14);
+}
+
+/* fallback if you ever use it */
+.flytau-brand__logo-fallback{
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display:grid;
+  place-items:center;
+  font-weight: 900;
+  font-size: 10px;
+  letter-spacing: .9px;
+  color: rgba(255,255,255,.95);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: 1px solid rgba(234,242,255,.14);
+  box-shadow: 0 18px 35px rgba(47,107,255,.22);
+}
+
+.flytau-brand__name{
+  font-weight: 900;
+  letter-spacing: .4px;
+  line-height: 1.1;
+}
+.flytau-brand__tagline{
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.flytau-nav{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap: wrap;
+}
+
+.flytau-nav__link{
+  text-decoration:none;
+  border-bottom: none;
+  color: rgba(234,242,255,.90);
+  font-weight: 800;
+  font-size: 13.5px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+.flytau-nav__link:hover{
+  border-color: rgba(39,215,255,.35);
+  background: rgba(39,215,255,.08);
+}
+
+.flytau-actions{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  justify-content:flex-end;
+  min-width: 220px;
+}
+
+.flytau-userchip{
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  padding: 9px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.14);
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.flytau-userchip__dot{
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #4cffb1;
+  box-shadow: 0 0 0 4px rgba(76,255,177,.12);
+}
+
+.flytau-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-weight: 900;
+  text-decoration:none;
+  white-space: nowrap;
+  border-bottom: none;
+}
+
+.flytau-btn--primary{
+  color: #07122b;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 14px 24px rgba(47,107,255,.18);
+}
+.flytau-btn--primary:hover{ filter: brightness(1.05); }
+
+.flytau-btn--ghost{
+  color: rgba(234,242,255,.92);
+  border: 1px solid rgba(234,242,255,.20);
+  background: rgba(0,0,0,.12);
+}
+.flytau-btn--ghost:hover{
+  border-color: rgba(39,215,255,.45);
+  background: rgba(39,215,255,.08);
+}
+
+/* =========================================================
+   Cards / Paragraph blocks
+   ========================================================= */
+
+p{
+  width: var(--container);
+  margin: 0 auto 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--card), var(--card2));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+p strong{
+  color: var(--text);
+  font-weight: 900;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(234,242,255,.16);
+  background: rgba(0,0,0,.16);
+  margin-left: 6px;
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Small p directly after forms (login/register prompts) */
+form + p{
+  width: var(--narrow);
+  margin: 10px auto 0;
+  text-align: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* =========================================================
+   Error box (used in create/edit/assign pages)
+   ========================================================= */
+
+.error-box{
+  width: var(--narrow);
+  margin: 14px auto 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 70, 70, .30);
+  background: rgba(255, 70, 70, .10);
+  color: rgba(255, 210, 210, .95);
+  font-weight: 800;
+}
+
+/* =========================================================
+   Forms (covers login/register/create/edit/assign/checkout/seats)
+   ========================================================= */
+
+form{
+  width: var(--narrow);
+  margin: 0 auto 18px;
+  padding: 22px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--card), var(--card2));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Many of your templates use <br><br> after inputs */
+form br{ display:none; }
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+input[type="number"],
+input:not([type]),
+select{
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(234,242,255,.18);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline: none;
+  width: 100%;
+}
+
+input::placeholder{ color: rgba(234,242,255,.45); }
+
+input:focus, select:focus{
+  border-color: rgba(39,215,255,.60);
+  box-shadow: 0 0 0 4px rgba(39,215,255,.14);
+}
+
+/* Labels in forms (Create Flight has separate <label> lines) */
+form > label{
+  color: rgba(234,242,255,.88);
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+/* Checkbox lines (Assign Crew / Add Pilot/Steward) */
+label{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(234,242,255,.16);
+  background: rgba(0,0,0,.12);
+  color: rgba(234,242,255,.88);
+}
+
+input[type="checkbox"]{
+  width: 18px;
+  height: 18px;
+  accent-color: #27d7ff;
+}
+
+/* Buttons */
+button,
+input[type="submit"]{
+  height: 48px;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 900;
+  color: #07122b;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 18px 30px rgba(47,107,255,.18);
+}
+button:hover, input[type="submit"]:hover{ filter: brightness(1.05); }
+button:active, input[type="submit"]:active{ transform: translateY(1px); }
+
+/* Secondary/cancel link inside a form (Edit Pilot/Steward has Cancel link) */
+form a{
+  border-bottom: none;
+  text-decoration: none;
+  color: rgba(234,242,255,.92);
+  border: 1px solid rgba(234,242,255,.20);
+  background: rgba(0,0,0,.12);
+  padding: 12px 14px;
+  border-radius: 14px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+}
+form a:hover{
+  border-color: rgba(39,215,255,.45);
+  background: rgba(39,215,255,.08);
+}
+
+/* When you have both button and cancel link, keep spacing nice */
+form button + a{ margin-top: 8px; }
+
+/* =========================================================
+   Tables (Manage Flights / Admin revenue / Employees / Seats)
+   ========================================================= */
+
+table{
+  width: var(--container);
+  margin: 0 auto 22px;
+  border-collapse: separate !important;
+  border-spacing: 0;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--card), var(--card2));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+th, td{
+  padding: 14px 14px !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(234,242,255,.10) !important;
+  text-align: left;
+  color: rgba(234,242,255,.92);
+  vertical-align: middle;
+}
+
+th{
+  font-size: 13px;
+  letter-spacing: .25px;
+  color: rgba(234,242,255,.88);
+  background: rgba(0,0,0,.18);
+  border-bottom: 1px solid var(--line) !important;
+  white-space: nowrap;
+}
+
+tr:hover td{ background: rgba(39,215,255,.06); }
+
+/* Numeric hint */
+td:first-child, td:last-child{
+  font-variant-numeric: tabular-nums;
+}
+
+/* Make "Edit flight" links look like buttons inside tables */
+table a{
+  display:inline-block;
+  padding: 9px 12px;
+  border-radius: 12px;
+  text-decoration:none;
+  font-weight: 900;
+  color: #07122b;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 14px 26px rgba(47,107,255,.18);
+  border-bottom: none;
+  white-space: nowrap;
+}
+table a:hover{ filter: brightness(1.05); }
+
+/* Inline delete forms in employees table: make delete button "danger" but still pretty */
+table form[style*="display:inline"]{
+  display:inline !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+table form[style*="display:inline"] button{
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  color: rgba(255,210,210,.95);
+  background: rgba(255,70,70,.14);
+  border: 1px solid rgba(255,70,70,.25);
+  box-shadow: none;
+}
+table form[style*="display:inline"] button:hover{
+  background: rgba(255,70,70,.20);
+  border-color: rgba(255,70,70,.35);
+}
+
+/* Manage Flights: READY / NOT READY tags */
+.ready, .not-ready{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(234,242,255,.16);
+  font-weight: 900;
+  letter-spacing: .3px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.ready{
+  color: #b7ffd5;
+  background: rgba(0, 255, 170, .10);
+  border-color: rgba(0, 255, 170, .22);
+}
+.ready::before{
+  content:"";
+  width: 9px; height: 9px; border-radius: 999px;
+  background: #00ffb0;
+  box-shadow: 0 0 0 4px rgba(0,255,176,.12);
+}
+
+.not-ready{
+  color: #ffd0d0;
+  background: rgba(255, 70, 70, .10);
+  border-color: rgba(255, 70, 70, .22);
+}
+.not-ready::before{
+  content:"";
+  width: 9px; height: 9px; border-radius: 999px;
+  background: #ff4a4a;
+  box-shadow: 0 0 0 4px rgba(255,74,74,.12);
+}
+
+/* Seat selection table should be more compact */
+form table{
+  width: 100%;
+  margin: 10px 0 0;
+  box-shadow: none;
+}
+form table td{
+  padding: 10px 10px !important;
+  text-align: center;
+}
+form input[type="radio"]{
+  transform: scale(1.05);
+  accent-color: #27d7ff;
+}
+
+/* =========================================================
+   Lists / Admin Dashboard / Results list
+   ========================================================= */
+
+/* Admin dashboard list */
+ul{
+  width: var(--container);
+  margin: 0 auto 18px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+ul li{
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--card), var(--card2));
+  box-shadow: 0 12px 30px rgba(0,0,0,.28);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+ul li a{
+  display:block;
+  padding: 14px 16px;
+  border-bottom: none;
+  font-weight: 900;
+  color: rgba(234,242,255,.92);
+}
+ul li a:hover{
+  background: rgba(39,215,255,.08);
+}
+
+/* Results in landing page: your HTML is <a><li>..</li></a>
+   Not valid HTML, but this makes it look decent anyway. */
+ul > a{
+  display: block;
+  border-bottom: none;
+  text-decoration: none;
+}
+ul > a:hover{ filter: brightness(1.05); }
+
+/* =========================================================
+   Landing search form (inline layout recommended)
+   If you can add class="form-inline" to that form - great.
+   If not, it'll still look fine.
+   ========================================================= */
+
+form.form-inline{
+  width: var(--container);
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+form.form-inline input[type="text"],
+form.form-inline input[type="date"],
+form.form-inline select{
+  width: auto;
+  min-width: 210px;
+}
+
+/* Hide "No flights found." message on landing (you asked to remove it) */
+p:has(+ form),
+form + p:contains("No flights found."){ /* may not work in all browsers */
+  /* fallback below */
+}
+p{ /* fallback: hide just the plain message text if it's the only thing */
+}
+p:where(:not(.error-box)){
+  /* keep default; no global hiding */
+}
+p:where(:not(.error-box)){
+  /* no-op; kept to avoid accidental hide */
+}
+
+/* Safer hide: If your landing page has exactly 'No flights found.' in a p,
+   it will still show. Best practice: wrap it with class in HTML.
+   Since you said "don't add things", we won't force it here. */
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width: 900px){
+  table{
+    display:block;
+    overflow-x:auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  th, td{ min-width: 140px; }
+}
+
+@media (max-width: 860px){
+  .flytau-header__inner{ flex-wrap: wrap; gap: 10px; }
+  .flytau-nav{ width: 100%; justify-content: center; }
+  .flytau-actions{ width: 100%; justify-content: center; min-width:auto; }
+  .flytau-brand{ min-width:auto; }
+
+  h1, h2, h3, p, ul, table{ width: var(--narrow); }
+  hr{ width: var(--narrow); }
+}
+
+@media (max-width: 520px){
+  h1{ font-size: 28px; }
+  .flytau-brand__tagline{ display:none; }
+  .flytau-userchip{ display:none; }
+}
