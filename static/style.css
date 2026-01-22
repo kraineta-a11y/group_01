@@ -925,6 +925,21 @@ form .crew-section-title{
   color: rgba(234,242,255,.92) !important;
 }
 
+/* Section headings inside forms (Business/Economy/Pilots/Stewards וכו') */
+form h2, form h3, form strong{
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 0 12px;      /* אותו "קו" כמו השדות */
+  margin: 12px 0 8px;
+
+  text-align: left;
+  direction: ltr;
+
+  white-space: nowrap;
+}
+
 
 
 
