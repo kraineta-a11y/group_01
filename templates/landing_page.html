@@ -54,10 +54,12 @@
         </li>
       {% endfor %}
     </ul>
+    
 
     <div class="post-results-actions">
       <a class="flytau-btn flytau-btn--primary" href="{{ url_for('manage_booking') }}">Manage booking</a>
       <a class="flytau-btn flytau-btn--ghost" href="{{ url_for('logout') }}">Log Out</a>
+        <a href="{{ url_for('manage_bookings') }}">Manage Bookings</a>
     </div>
 
   {% else %}
