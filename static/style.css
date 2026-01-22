@@ -891,6 +891,40 @@ form .crew-section-title{
 form label.crew-item{
   width: 100%;
 }
+/* FORCE section titles to align with checkbox rows */
+form .crew-section-title{
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+
+  padding: 0 12px !important;   /* אותו padding כמו label */
+  margin: 0 0 10px !important;  /* צמוד מעל הצ׳קבוקסים */
+
+  text-align: left !important;
+  direction: ltr !important;
+
+  font-weight: 900 !important;
+  color: rgba(234,242,255,.92) !important;
+}
+form .crew-section-title{
+  display:block !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+
+  padding: 10px 12px !important;
+  margin: 0 0 10px !important;
+
+  border-radius: 14px !important;
+  border: 1px solid rgba(234,242,255,.16) !important;
+  background: rgba(0,0,0,.12) !important;
+
+  text-align:left !important;
+  direction:ltr !important;
+
+  font-weight:900 !important;
+  color: rgba(234,242,255,.92) !important;
+}
+
 
 
 
