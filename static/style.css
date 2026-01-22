@@ -657,4 +657,28 @@ p:where(:not(.error-box)){
   h1{ font-size: 28px; }
   .flytau-brand__tagline{ display:none; }
   .flytau-userchip{ display:none; }
+
+}
+
+/* Logo only - top left on every page */
+.corner-logo{
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 9999;
+}
+
+.corner-logo a{
+  border-bottom: none;
+  display: inline-block;
+}
+
+.corner-logo img{
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(234,242,255,.22);
+  box-shadow: 0 14px 28px rgba(0,0,0,.35);
 }
