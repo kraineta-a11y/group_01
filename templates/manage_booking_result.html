@@ -6,7 +6,17 @@
 
 </head>
 <body>
-
+    <header class="flytau-header">
+  <div class="flytau-header__inner">
+    <a class="flytau-brand" href="{{ url_for('home') }}">
+      <img class="flytau-brand__logo" src="{{ url_for('static', filename='logo.png') }}" alt="FLYTAU logo">
+      <div>
+        <div class="flytau-brand__name">FLYTAU</div>
+        <div class="flytau-brand__tagline">Find. Book. Fly.</div>
+      </div>
+    </a>
+  </div>
+</header>
 <h1>Manage Your Booking</h1>
 
 {% for b in bookings %}
