@@ -32,6 +32,7 @@
   </datalist>
 
   <button type="submit">Search</button>
+    <a href="{{ url_for('manage_bookings') }}">Manage Bookings</a>
 </form>
     <div class="post-results-actions">
 </div>
@@ -60,7 +61,6 @@
     
 
     <div class="post-results-actions">
-      <a class="flytau-btn flytau-btn--primary" href="{{ url_for('manage_booking') }}">Manage booking</a>
       <a class="flytau-btn flytau-btn--ghost" href="{{ url_for('logout') }}">Log Out</a>
         <a href="{{ url_for('manage_booking') }}">Manage Bookings</a>
     </div>
