@@ -1,47 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FLYTAU Seat Selection</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
+  <title>FLYTAU Seat Selection</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
 <div class="corner-logo">
   <a href="{{ url_for('landing_page') }}">
     <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
   </a>
 </div>
-    <form method="POST" action="{{ url_for('seat_selection', flight_number=flight_number, count=count) }}">
-        <h2>Select Seats for {{ count }} Passengers</h2>
-        {% for i in range(1, count + 1) %}
-  <h3>Passenger {{ i }}</h3>
 
-<div class="seat-map-card">
-  <div class="seat-map-scroll">
-    <div class="seat-map">
-      {% for row_num, row_seats in seats.items() %}
-        <div class="seat-row">
-          {% for seat in row_seats %}
-            {% if seat.Availability %}
-              <label class="seat">
-                <input
-                  class="seat-input"
-                  type="radio"
-                  name="seat_{{ i }}"
-                  value="{{ seat.Row_num }}{{ seat.Col_num }}"
-                  required
-                >
-                <span class="seat-label">{{ seat.Row_num }}{{ seat.Col_num }}</span>
-              </label>
-            {% else %}
-              <span class="seat seat-disabled">❌</span>
-            {% endif %}
-          {% endfor %}
+<div class="seat-page">
+  <form method="POST" action="{{ url_for('seat_selection', flight_number=flight_number, count=count) }}">
+    <h2>Select Seats for {{ count }} Passengers</h2>
+
+    {% for i in range(1, count + 1) %}
+      <h3>Passenger {{ i }}</h3>
+
+      <div class="seat-map-card">
+        <div class="seat-map-scroll">
+          <div class="seat-map">
+            {% for row_num, row_seats in seats.items() %}
+              <div class="seat-row">
+                {% for seat in row_seats %}
+                  {% if seat.Availability %}
+                    <label class="seat">
+                      <input
+                        class="seat-input"
+                        type="radio"
+                        name="seat_{{ i }}"
+                        value="{{ seat.Row_num }}{{ seat.Col_num }}"
+                        required
+                      >
+                      <span class="seat-label">{{ seat.Row_num }}{{ seat.Col_num }}</span>
+                    </label>
+                  {% else %}
+                    <span class="seat seat-disabled">❌</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
         </div>
-      {% endfor %}
-    </div>
-  </div>
+      </div>
+
+    {% endfor %}
+
+    <button type="submit">Confirm Seats</button>
+  </form>
 </div>
+
+</body>
+</html>
 
 
 
