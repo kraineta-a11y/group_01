@@ -1339,6 +1339,10 @@ form h2, form h3, form strong{
   width: 100%;
 }
 
+@media (max-width: 520px){
+  .seat-row{ grid-auto-columns: 58px; }
+}
+
 
 
 
