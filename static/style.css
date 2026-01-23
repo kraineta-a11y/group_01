@@ -1330,6 +1330,15 @@ form h2, form h3, form strong{
   border-style: dashed;
 }
 
+.seat-row{
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 68px;   /* גודל קבוע לכל מושב */
+  justify-content: start;    /* לא למתוח */
+  gap: 10px;
+  width: 100%;
+}
+
 
 
 
