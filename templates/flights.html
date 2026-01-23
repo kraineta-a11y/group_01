@@ -36,17 +36,14 @@
 
 <form method="GET" action="{{ url_for('admin_flights') }}">
     <label for="status">Filter by Status:</label>
-    <select name="status" id="status">
-        <option value="">All</option>
-        <option value="ACTIVE" {% if selected_status == 'ACTIVE' %}selected{% endif %}>Active</option>
-        <option value="CANCELLED" {% if selected_status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
-        <option value="SYSTEM_CANCELLED" {% if selected_status == 'SYSTEM_CANCELLED' %}selected{% endif %}>System Cancelled</option>
-        <option value="LANDED" {% if selected_status == 'LANDED' %}selected{% endif %}>Landed</option>
-        <option value="DELAYED" {% if selected_status == 'DELAYED' %}selected{% endif %}>Delayed</option>
-<option value="DELAYED" {% if selected_status == 'DELAYED' %}selected{% endif %}>Delayed</option>
+<select name="status" id="status">
+  {% for val, label in status_options %}
+    <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>
+      {{ label }}
+    </option>
+  {% endfor %}
+</select>
 
-        <option value="FULLY BOOKED" {% if selected_status == 'FULLY BOOKED' %}selected{% endif %}>Fully Booked</option>
-    </select>
     <button type="submit">Filter</button>
 </form>
 
