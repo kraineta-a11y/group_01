@@ -1710,6 +1710,9 @@ def confirm_booking(flight_number):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    if len(seats) != len(set(seats)):
+        abort(400, description= "Error- same seat was selected more than once")
+        
     # Create booking
     if get_user_role(session) == 'client':
         email = session.get('client_email')
@@ -1901,7 +1904,7 @@ def manage_booking_result():
             total_price = flight['Price']
         # refund logic (unchanged semantics)
         if b['Booking_status'] == 'CUSTOMER_CANCELLED':
-            b['refund'] = total_price * Decimal(0.05)
+            b['refund'] = round(total_price * Decimal(0.05))
         elif b['Booking_status'] == 'SYSTEM_CANCELLED':
             b['refund'] = total_price
         else:
