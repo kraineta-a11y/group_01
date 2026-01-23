@@ -958,6 +958,11 @@ def admin_flights():  # View and manage flights
 
     cursor.execute(query, params)
     flights = cursor.fetchall()
+    for f in flights:
+    s = f.get('Flight_status')
+    s = (s or "").strip().upper()
+    f['Flight_status'] = s or "ACTIVE"   # fallback אם יצא ריק/NULL
+
 
     cursor.close()
     conn.close()
