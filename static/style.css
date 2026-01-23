@@ -1442,6 +1442,21 @@ h1{ text-align: center; }
   opacity: 0.9;
 }
 
+.form-note{
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 18px;
+
+  background: rgba(255,255,255,0.08);
+  opacity: 0.9;
+
+  overflow-wrap: anywhere;
+}
+
 
 
 
