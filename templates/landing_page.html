@@ -44,12 +44,12 @@
     <ul class="results-grid">
       {% for flight in flights %}
         <li>
-          <a class="result-card" href="{{ url_for('flight_view', flight_number=flight['Flight_number']) }}">
+          <a class="result-card" href="{{ url_for('flight_view', flight_number=flight['Flight_number'], class_type=flight['Class_type']) }}">
             <div class="result-top">
               <span class="result-route">{{ flight.Origin_airport }} → {{ flight.Destination_airport }}</span>
               <span class="result-price">₪{{ flight.Price }}</span>
             </div>
-
+            <input type="hidden" name = "Class_type" id="Class_type" value="{{ flight.Class_type }}"></input>
             <div class="result-bottom">
               <span>{{ flight.Departure_date }}</span>
               <span>{{ flight.Departure_time }}</span>

@@ -7,6 +7,7 @@ import mysql.connector as mdb
 from flask import url_for
 from datetime import datetime, timedelta, time
 from decimal import Decimal
+from werkzeug.exceptions import abort
 
 
 
@@ -409,7 +410,7 @@ def handle_crew_update(flight_number):
 
     # Validate flight exists
     if not flight_number:
-        return "Flight number missing", 400
+        abort(400, description="Flight number missing")
 
     # Determine long/short haul
     long_haul_required = is_long_haul_flight(flight_number)
@@ -512,7 +513,7 @@ def generate_seats_for_plane(plane_id):
 @application.route('/admin')
 def admin_dashboard():
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -538,7 +539,7 @@ def admin_dashboard():
 @application.route('/admin/generate_all_seats')
 def admin_fix_existing_seats():
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -590,7 +591,7 @@ def admin_fix_existing_seats():
 @application.route('/admin/reports')
 def admin_reports():
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -718,7 +719,7 @@ GROUP BY s.Employee_id;
 @application.route('/admin/add_plane', methods=['GET', 'POST'])
 def add_plane():
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
     if request.method == 'POST':
         manufacturer = request.form['manufacturer']
         size = request.form['size']
@@ -750,7 +751,7 @@ def add_plane():
 @application.route('/admin/add_plane/<int:plane_id>/classes', methods=['GET', 'POST'])
 def add_classes(plane_id):
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT Size FROM Plane WHERE Plane_id = %s", (plane_id,))
@@ -799,7 +800,7 @@ def add_classes(plane_id):
 @application.route('/admin/employees')
 def employees():
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -830,7 +831,7 @@ def employees():
 @application.route('/admin/employees/add/pilot', methods=['GET', 'POST'])
 def add_pilot():
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
     if request.method == 'POST':
         first = request.form['first_name']
         last = request.form['last_name']
@@ -867,7 +868,7 @@ def add_pilot():
 @application.route('/admin/employees/add/steward', methods=['GET', 'POST'])
 def add_steward():
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
     if request.method == 'POST':
         first = request.form['first_name']
         last = request.form['last_name']
@@ -908,7 +909,7 @@ def add_steward():
 @application.route('/admin/employees/pilots/<int:pilot_id>/edit', methods=['GET', 'POST'])
 def edit_pilot(pilot_id):
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -949,7 +950,7 @@ def edit_pilot(pilot_id):
 @application.route('/admin/employees/Stewards/<int:steward_id>/edit', methods=['GET', 'POST'])
 def edit_steward(steward_id):
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -991,7 +992,7 @@ def edit_steward(steward_id):
 @application.route('/admin/employees/pilots/<int:pilot_id>/delete', methods=['POST'])
 def delete_pilot(pilot_id):
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1007,7 +1008,7 @@ def delete_pilot(pilot_id):
     if in_use:
         cursor.close()
         conn.close()
-        return "Cannot delete pilot assigned to flights", 400
+        abort(400, description="Cannot delete pilot assigned to flights")
 
     cursor.execute("""
         DELETE FROM Pilot WHERE Employee_id = %s
@@ -1023,7 +1024,7 @@ def delete_pilot(pilot_id):
 @application.route('/admin/employees/stewards/<int:steward_id>/delete', methods=['POST'])
 def delete_steward(steward_id):
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1039,7 +1040,7 @@ def delete_steward(steward_id):
     if in_use:
         cursor.close()
         conn.close()
-        return "Cannot delete steward assigned to flights", 400
+        abort(400, description="Cannot delete steward assigned to flights")
 
     cursor.execute("""
         DELETE FROM Steward WHERE Employee_id = %s
@@ -1057,7 +1058,7 @@ def delete_steward(steward_id):
 @application.route('/admin/flights', methods=['GET'])
 def admin_flights(): # View and manage flights
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
     
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -1103,7 +1104,7 @@ def admin_flights(): # View and manage flights
 @application.route('/admin/flights/<int:flight_number>/edit', methods=['GET', 'POST'])
 def edit_flight(flight_number):
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -1116,7 +1117,7 @@ def edit_flight(flight_number):
 
     context = build_edit_flight_context(flight_number)
     if not context:
-        return "Flight not found", 404
+        abort(404, description="Flight not found")
 
     return render_template('edit_flight.html', **context)
 
@@ -1128,7 +1129,7 @@ def edit_flight(flight_number):
 def admin_create_flight():
     error = None
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -1298,7 +1299,7 @@ def assign_crew():
     conn = get_db_connection()
     cursor = conn.cursor()
     if get_user_role() != 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -1436,7 +1437,7 @@ def login():
 
         cursor.close()
         conn.close()
-        return "Invalid credentials", 401
+        abort(401, description="Invalid credentials")
 
     return render_template('login.html')
 
@@ -1458,7 +1459,7 @@ def register():
         if cursor.fetchone():
             cursor.close()
             conn.close()
-            return "Email already registered", 400
+            abort(400, description="Email already registered")
         
         #check if email exists in clients
         cursor.execute("SELECT * FROM Client WHERE Email = %s", (email,))
@@ -1498,7 +1499,7 @@ def logout():
 @application.route('/search', methods=['GET'])
 def search():
     if get_user_role() == 'manager':
-        return "Forbidden", 403
+        abort(403, description="Forbidden")
     
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -1559,7 +1560,7 @@ def search():
 
 @handle_errors
 @application.route('/flight_view/<int:flight_number>', methods=['GET','POST'])
-def flight_view(flight_number):
+def flight_view(flight_number,class_type):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     query = """
@@ -1572,8 +1573,9 @@ def flight_view(flight_number):
                     Flight_pricing as fp ON f.Flight_number = fp.Flight_number AND f.Plane_id = fp.Plane_id
                 WHERE 
                     f.Flight_number = %s
+                    AND fp.Class_type = %s
             """
-    cursor.execute(query, (flight_number,))
+    cursor.execute(query, (flight_number,class_type))
     flights = cursor.fetchone()
     cursor.fetchall()
 
@@ -1618,7 +1620,7 @@ def passenger_count(flight_number):
 def passenger_details(flight_number):
     count = int(request.args.get('count'))
     if count < 1 or count > 7:
-        return "Invalid passenger count", 400
+        abort(400, description="Invalid passenger count")
     if request.method == 'GET':
         if get_user_role() == 'client':
             # Pre-fill with registered client info
@@ -1652,7 +1654,7 @@ def passenger_details(flight_number):
         
         # Disallow proceeding if all passengers are children
         if all(p['type'] == 'CHILD' for p in passengers):
-            return "At least one adult passenger is required.", 400
+            abort(400, description="At least one adult passenger is required.")
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
@@ -1722,7 +1724,7 @@ def order_summary(flight_number):
     seats = session.get('selected_seats')
 
     if not passengers or not seats:
-        return "Session expired", 400
+        abort(400, description="Session expired")
 
     # parse seats
     parsed_seats = []
@@ -1751,7 +1753,7 @@ def order_summary(flight_number):
     if not flight:
         cursor.close()
         conn.close()
-        return "Flight not found", 404
+        abort(404, description="Flight not found")
 
     plane_id = flight['Plane_id']
 
@@ -1876,7 +1878,7 @@ def booking_success(Booking_number):
     conn.close()
 
     if not booking:
-        return "Booking not found", 404
+        abort(404, description="Booking not found")
 
     return render_template(
         'booking_success.html',
@@ -1937,7 +1939,7 @@ def manage_booking_result():
     if not bookings:
         cursor.close()
         conn.close()
-        return "No bookings found", 404
+        abort(404, description="No bookings found")
 
     # load seats
     for b in bookings:
@@ -2033,7 +2035,7 @@ def cancel_booking(booking_number):
     if not row:
         cursor.close()
         conn.close()
-        return "Booking not found", 404
+        abort(404, description="Booking not found")
 
     dep_date = row['Departure_date']
     dep_time_raw = row['Departure_time']
@@ -2087,7 +2089,28 @@ def cancel_booking(booking_number):
 
 @application.errorhandler(404)
 def invalid_route(e):
+    message = getattr(e, 'description', None)
+    if message:
+        return render_template('error.html', error_message=message), 404
     return redirect("/")
+
+
+@application.errorhandler(400)
+def bad_request(e):
+    message = getattr(e, 'description', 'Bad Request')
+    return render_template('error.html', error_message=message), 400
+
+
+@application.errorhandler(403)
+def forbidden(e):
+    message = getattr(e, 'description', 'Forbidden')
+    return render_template('error.html', error_message=message), 403
+
+
+@application.errorhandler(401)
+def unauthorized(e):
+    message = getattr(e, 'description', 'Unauthorized')
+    return render_template('error.html', error_message=message), 401
 
 
 @application.errorhandler(500)
