@@ -2093,6 +2093,128 @@ def unauthorized(e):
     return render_template('error.html', error_message=message), 401
 
 
+@handle_errors
+@application.route('/admin/schedules')
+def admin_schedules():
+    if get_user_role() != 'manager':
+        abort(403, description="Forbidden")
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Planes schedules
+    planes_query = """
+        SELECT p.Plane_id, p.Manufacturer, p.Size,
+               f.Flight_number, fr.Origin_airport, fr.Destination_airport,
+               f.Departure_date, f.Departure_time, f.Flight_status
+        FROM Plane p
+        LEFT JOIN Flight f ON p.Plane_id = f.Plane_id
+        LEFT JOIN Flying_route fr ON f.Route_id = fr.Route_id
+        ORDER BY p.Plane_id, f.Departure_date, f.Departure_time
+    """
+    cursor.execute(planes_query)
+    plane_flights = cursor.fetchall()
+
+    # Group by plane
+    planes = {}
+    for pf in plane_flights:
+        pid = pf['Plane_id']
+        if pid not in planes:
+            planes[pid] = {
+                'manufacturer': pf['Manufacturer'],
+                'size': pf['Size'],
+                'flights': [],
+                'current_location': None
+            }
+        if pf['Flight_number']:
+            planes[pid]['flights'].append({
+                'flight_number': pf['Flight_number'],
+                'origin': pf['Origin_airport'],
+                'destination': pf['Destination_airport'],
+                'departure_date': pf['Departure_date'],
+                'departure_time': pf['Departure_time'],
+                'status': pf['Flight_status']
+            })
+
+    # Set current location to the destination of the last LANDED flight
+    for pid, plane in planes.items():
+        landed_flights = [f for f in plane['flights'] if f['status'] == 'LANDED']
+        if landed_flights:
+            # Since flights are ordered by date, the last one is the most recent
+            plane['current_location'] = landed_flights[-1]['destination']
+
+    # For planes without flights, set default location or something, but assume they start somewhere.
+
+    # Pilots schedules
+    pilots_query = """
+        SELECT p.Employee_id, p.Hebrew_first_name, p.Hebrew_last_name,
+               f.Flight_number, fr.Origin_airport, fr.Destination_airport,
+               f.Departure_date, f.Departure_time, f.Flight_status
+        FROM Pilot p
+        LEFT JOIN Pilots_in_flight pif ON p.Employee_id = pif.Employee_id
+        LEFT JOIN Flight f ON pif.Flight_number = f.Flight_number
+        LEFT JOIN Flying_route fr ON f.Route_id = fr.Route_id
+        ORDER BY p.Employee_id, f.Departure_date, f.Departure_time
+    """
+    cursor.execute(pilots_query)
+    pilot_flights = cursor.fetchall()
+
+    pilots = {}
+    for pf in pilot_flights:
+        eid = pf['Employee_id']
+        if eid not in pilots:
+            pilots[eid] = {
+                'name': f"{pf['Hebrew_first_name']} {pf['Hebrew_last_name']}",
+                'flights': []
+            }
+        if pf['Flight_number']:
+            pilots[eid]['flights'].append({
+                'flight_number': pf['Flight_number'],
+                'origin': pf['Origin_airport'],
+                'destination': pf['Destination_airport'],
+                'departure_date': pf['Departure_date'],
+                'departure_time': pf['Departure_time'],
+                'status': pf['Flight_status']
+            })
+
+    # Stewards schedules
+    stewards_query = """
+        SELECT s.Employee_id, s.Hebrew_first_name, s.Hebrew_last_name,
+               f.Flight_number, fr.Origin_airport, fr.Destination_airport,
+               f.Departure_date, f.Departure_time, f.Flight_status
+        FROM Steward s
+        LEFT JOIN Stewards_in_flight sif ON s.Employee_id = sif.Employee_id
+        LEFT JOIN Flight f ON sif.Flight_number = f.Flight_number
+        LEFT JOIN Flying_route fr ON f.Route_id = fr.Route_id
+        ORDER BY s.Employee_id, f.Departure_date, f.Departure_time
+    """
+    cursor.execute(stewards_query)
+    steward_flights = cursor.fetchall()
+
+    stewards = {}
+    for sf in steward_flights:
+        eid = sf['Employee_id']
+        if eid not in stewards:
+            stewards[eid] = {
+                'name': f"{sf['Hebrew_first_name']} {sf['Hebrew_last_name']}",
+                'flights': []
+            }
+        if sf['Flight_number']:
+            stewards[eid]['flights'].append({
+                'flight_number': sf['Flight_number'],
+                'origin': sf['Origin_airport'],
+                'destination': sf['Destination_airport'],
+                'departure_date': sf['Departure_date'],
+                'departure_time': sf['Departure_time'],
+                'status': sf['Flight_status']
+            })
+
+    cursor.close()
+    conn.close()
+
+    return render_template('schedules.html', planes=planes, pilots=pilots, stewards=stewards)
+
+
 @application.errorhandler(500)
 def internal_error(e):
     return render_template('error.html', error_message="Internal Server Error"), 500

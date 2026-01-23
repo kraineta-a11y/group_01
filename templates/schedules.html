@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Schedules - FLYTAU Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .schedule-section {
+            margin-bottom: 40px;
+        }
+        .schedule-item {
+            margin-left: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+<div class="corner-logo">
+  <a href="{{ url_for('landing_page') }}">
+    <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
+  </a>
+</div>
+
+<h1>Schedules Overview</h1>
+
+<div class="schedule-section">
+    <h2>Planes</h2>
+    {% for plane_id, plane in planes.items() %}
+        <h3>Plane {{ plane_id }} - {{ plane.manufacturer }} ({{ plane.size }})</h3>
+        <p><strong>Current Location:</strong> {{ plane.current_location or 'Unknown' }}</p>
+        {% if plane.flights %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Flight #</th>
+                        <th>Origin</th>
+                        <th>Destination</th>
+                        <th>Departure Date</th>
+                        <th>Departure Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for flight in plane.flights %}
+                        <tr>
+                            <td>{{ flight.flight_number }}</td>
+                            <td>{{ flight.origin }}</td>
+                            <td>{{ flight.destination }}</td>
+                            <td>{{ flight.departure_date }}</td>
+                            <td>{{ flight.departure_time }}</td>
+                            <td>{{ flight.status }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No flights scheduled.</p>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<div class="schedule-section">
+    <h2>Pilots</h2>
+    {% for pilot_id, pilot in pilots.items() %}
+        <h3>{{ pilot.name }} (ID: {{ pilot_id }})</h3>
+        {% if pilot.flights %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Flight #</th>
+                        <th>Origin</th>
+                        <th>Destination</th>
+                        <th>Departure Date</th>
+                        <th>Departure Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for flight in pilot.flights %}
+                        <tr>
+                            <td>{{ flight.flight_number }}</td>
+                            <td>{{ flight.origin }}</td>
+                            <td>{{ flight.destination }}</td>
+                            <td>{{ flight.departure_date }}</td>
+                            <td>{{ flight.departure_time }}</td>
+                            <td>{{ flight.status }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No flights assigned.</p>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<div class="schedule-section">
+    <h2>Stewards</h2>
+    {% for steward_id, steward in stewards.items() %}
+        <h3>{{ steward.name }} (ID: {{ steward_id }})</h3>
+        {% if steward.flights %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Flight #</th>
+                        <th>Origin</th>
+                        <th>Destination</th>
+                        <th>Departure Date</th>
+                        <th>Departure Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for flight in steward.flights %}
+                        <tr>
+                            <td>{{ flight.flight_number }}</td>
+                            <td>{{ flight.origin }}</td>
+                            <td>{{ flight.destination }}</td>
+                            <td>{{ flight.departure_date }}</td>
+                            <td>{{ flight.departure_time }}</td>
+                            <td>{{ flight.status }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No flights assigned.</p>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<form method="GET" action="{{ url_for('admin_dashboard') }}">
+  <button type="submit">Back to Admin</button>  
+</form>
+
+</body>
+</html>
