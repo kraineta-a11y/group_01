@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
 </head>
-<body>
+<body class="landing">
 <div class="corner-logo">
   <a href="{{ url_for('landing_page') }}">
     <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
@@ -19,7 +19,7 @@
 
     {% endif %}
 
-<form method="GET" action="{{ url_for('search') }}">
+<form class="search-form" method="GET" action="{{ url_for('search') }}">
   <label for="origin">From:</label>
   <input list="airports" name="origin" id="origin" required>
 
