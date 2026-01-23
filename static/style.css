@@ -955,6 +955,12 @@ form h2, form h3, form strong{
   text-decoration: underline;     /* אם את רוצה קו רק מתחת לטקסט */
 }
 
+.content{
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
 
 
 
