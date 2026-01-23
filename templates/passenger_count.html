@@ -13,7 +13,7 @@
 </div>
     <form method="POST" action="{{ url_for('passenger_count', flight_number=flight_number) }}">
   <label>Number of passengers:</label>
-  <input type="number" name="passenger_count" min="1" max="10" required>
+  <input type="number" name="passenger_count" min="1" max="7" required>
   <button type="submit">Next</button>
 </form>
 </body>

@@ -245,6 +245,7 @@ def admin_dashboard():
     flights= cursor.fetchall()
 
     update_flight_status()
+    update_booking_status()
 
     cursor.execute("SELECT * FROM Pilot")
     pilots= cursor.fetchall()
@@ -928,9 +929,8 @@ def admin_flights():
     if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
-    # ⚠️ חשוב: אל תתני לפונקציה הזו לדרוס DELAYED.
-    # אם update_flight_status אצלך דורס — תקני אותו בסעיף 2.
     update_flight_status()
+    update_booking_status()
 
     status_filter = (request.args.get('status') or "").strip()  # "" = All
 
@@ -1307,6 +1307,7 @@ def landing_page():
     
     # Load airport list for search dropdowns
     update_flight_status()
+    update_booking_status()
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT Airport_code FROM Airport")
@@ -1907,6 +1908,8 @@ def manage_booking_result():
             b['error'] = None
             b['seat_prices'] = prices
 
+        for p in prices:
+            b['price'] = p['Price']
         total_price = sum(p['Price'] for p in prices)
         if b['Booking_status'] != 'ACTIVE':
             cursor.execute("""

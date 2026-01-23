@@ -49,6 +49,23 @@ def update_flight_status():
     cursor.close()
     conn.close()
 
+def update_booking_status():
+    # runs periodically to update booking status based on current time
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE Booking b
+        JOIN Flying_route fr ON b.Route_id = fr.Route_id
+        SET b.Booking_status = 'COMPLETED'
+        WHERE
+            f.Flight_status = 'LANDED'
+    """)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 def get_available_planes(flight_number):
     """Return planes not assigned to conflicting flights."""
     conn = get_db_connection()
