@@ -1423,6 +1423,13 @@ h1{ text-align: center; }
   left: auto !important;
   transform: none !important;
 }
+.field-label{
+  display:block;
+  margin: 8px 0 6px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
 
 
 
