@@ -911,14 +911,33 @@ def edit_flight(flight_number):
         abort(403, description="Forbidden")
 
     if request.method == 'POST':
-        action = request.form.get('action')
+        action = request.form.get('action', '').strip()
 
-        if action == 'update_flight':
-            return handle_flight_update(flight_number, request, session)
+        try:
+            if action == 'update_flight':
+                # חשוב: לא להעביר request/session כי הפונקציה שלך לא מקבלת אותם
+                return handle_flight_update(flight_number)
 
-        if action == 'update_crew':
-            return handle_crew_update(flight_number, request)
+            if action == 'update_crew':
+                # חשוב: גם פה לא להעביר request
+                return handle_crew_update(flight_number)
 
+            # אם action לא הגיע בכלל / ערך לא מוכר
+            context = build_edit_flight_context(
+                flight_number,
+                error="Invalid action submitted."
+            )
+            return render_template('edit_flight.html', **context)
+
+        except Exception as e:
+            # במקום קריסה - חוזרים לעמוד עם הודעת שגיאה
+            context = build_edit_flight_context(
+                flight_number,
+                error=f"Could not save changes: {e}"
+            )
+            return render_template('edit_flight.html', **context)
+
+    # GET
     context = build_edit_flight_context(flight_number)
     if not context:
         abort(404, description="Flight not found")
