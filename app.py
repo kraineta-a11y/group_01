@@ -9,6 +9,9 @@ from datetime import datetime, timedelta, time
 from decimal import Decimal
 from werkzeug.exceptions import abort
 
+from database import *
+from helpers import *
+
 
 
 
@@ -30,271 +33,7 @@ application.config.update(
 Session(application)
 
 
-def handle_errors(f):
-    def wrapper(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except Exception as e:
-            return render_template('error.html', error_message=str(e))
-    return wrapper
-
 # --- Database connection ---
-def get_db_connection():
-    return mdb.connect(
-        host='Netarosh.mysql.pythonanywhere-services.com',
-        user='Netarosh',
-        password='group01root',
-        database='Netarosh$FLYTAU'
-    )
-
-def get_user_role():
-    """Determine role based on session info (email or ID)."""
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    if "manager_employee_id" in session:
-        cursor.execute("SELECT * FROM Manager WHERE Employee_id = %s", (session["manager_employee_id"],))
-        if cursor.fetchone():
-            cursor.close()
-            conn.close()
-            return 'manager'
-    if "client_email" in session:
-        cursor.execute("SELECT * FROM Registered_client WHERE Email = %s", (session["client_email"],))
-        if cursor.fetchone():
-            cursor.close()
-            conn.close()
-            return 'client'
-    cursor.close()
-    conn.close()
-    return 'guest'
-
-def time_handle_normalize(departure_time):
-    # normalize departure time
-    if isinstance(departure_time, str):
-        # could be "14:30" or "14:30:00"
-        try:
-            dep_time = datetime.strptime(departure_time, "%H:%M").time()
-        except ValueError:
-            dep_time = datetime.strptime(departure_time, "%H:%M:%S").time()
-    elif isinstance(departure_time, timedelta):
-        dep_time = (datetime.min + departure_time).time()
-    else:
-        dep_time = departure_time  # already a datetime.time
-
-    return dep_time
-
-def update_flight_status():
-# runs periodically to update flight status based on current time
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        UPDATE Flight f
-        JOIN Flying_route fr ON f.Route_id = fr.Route_id
-        SET f.Flight_status = 'LANDED'
-        WHERE
-            f.Flight_status = 'ACTIVE'
-            AND TIMESTAMP(f.Departure_date, f.Departure_time)
-                + INTERVAL fr.Duration MINUTE
-                < NOW()
-    """)
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-def get_available_planes(flight_number):
-    """Return planes not assigned to conflicting flights."""
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    # Get flight details
-    query = """
-        SELECT f.*, fr.*
-        FROM Flight f
-        JOIN Flying_route fr ON f.Route_id = fr.Route_id
-        WHERE f.Flight_number = %s
-    """
-    cursor.execute(query, (flight_number,))
-    flight = cursor.fetchone()
-    # defining departure and arrival datetimes
-
-    dep_time_td = flight['Departure_time']   # timedelta
-    dep_time = (datetime.min + dep_time_td).time()
-    dep_dt = datetime.combine(
-        flight['Departure_date'],
-        dep_time
-    )
-
-    arr_dt = dep_dt + timedelta(minutes=flight['Duration'])
-
-    query = """
-        SELECT p.Plane_id, p.Manufacturer, p.Size
-        FROM Plane p
-        WHERE p.Plane_id NOT IN (
-            SELECT f2.Plane_id
-            FROM Flight f2
-            JOIN Flying_route fr2 ON f2.Route_id = fr2.Route_id
-            WHERE
-                TIMESTAMP(f2.Departure_date, f2.Departure_time) < %s
-            AND TIMESTAMP(f2.Departure_date, f2.Departure_time)
-                + INTERVAL fr2.Duration MINUTE > %s
-        )
-    """
-    cursor.execute(query, (arr_dt, dep_dt))
-    results = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-    return results
-
-def get_available_staff(flight_number, employee_table, assignment_table, extra_conditions=""):
-    """Return staff members not assigned to conflicting flights."""
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    # Get flight details
-    query = """
-        SELECT f.*, fr.*
-        FROM Flight f
-        JOIN Flying_route fr ON f.Route_id = fr.Route_id
-        WHERE f.Flight_number = %s
-    """
-    cursor.execute(query, (flight_number,))
-    flight = cursor.fetchone()
-    # defining departure and arrival datetimes
-    dep_time_td = flight['Departure_time']   # timedelta
-    dep_time = (datetime.min + dep_time_td).time()
-
-    dep_dt = datetime.combine(
-        flight['Departure_date'],
-        dep_time
-    )
-
-    arr_dt = dep_dt + timedelta(minutes=flight['Duration'])
-
-    query = f"""
-        SELECT e.Employee_id,
-               e.Hebrew_first_name,
-               e.Hebrew_last_name
-        FROM {employee_table} e
-        WHERE 1=1
-        {extra_conditions}
-        AND e.Employee_id NOT IN (
-            SELECT a.Employee_id
-            FROM {assignment_table} a
-            JOIN Flight f2 ON a.Flight_number = f2.Flight_number
-            JOIN Flying_route fr2 ON f2.Route_id = fr2.Route_id
-            WHERE
-                TIMESTAMP(f2.Departure_date, f2.Departure_time) < %s
-            AND TIMESTAMP(f2.Departure_date, f2.Departure_time)
-                + INTERVAL fr2.Duration MINUTE > %s
-        )
-    """
-
-    cursor.execute(query, (arr_dt, dep_dt))
-    result = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-    return result
-
-def get_available_pilots(flight_number, long_haul_required):
-    condition = ""
-    if long_haul_required:
-        condition = "AND e.Long_haul_qualified = TRUE"
-
-    return get_available_staff(
-        flight_number,
-        employee_table="Pilot",
-        assignment_table="Pilots_in_flight",
-        extra_conditions=condition
-    )
-def get_available_stewards(flight_number, long_haul_required):
-    condition = ""
-    if long_haul_required:
-        condition = "AND e.Long_haul_qualified = TRUE"
-    return get_available_staff(
-        flight_number,
-        employee_table="Steward",
-        assignment_table="Stewards_in_flight", 
-        extra_conditions=condition
-    )
-def is_long_haul_flight(flight_number):
-    # Get plane size from DB
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT p.Size 
-        FROM Plane p
-        JOIN Flight f ON p.Plane_id = f.Plane_id
-        WHERE f.Flight_number = %s
-    """, (flight_number,))
-    plane = cursor.fetchone()
-    plane_size = plane['Size'] if plane else None
-    long_haul_required = plane_size == 'LARGE'
-    cursor.close()
-    conn.close()
-    return long_haul_required
-
-def build_edit_flight_context(flight_number, error=None):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute("""
-        SELECT f.Flight_number, p.Size, f.Route_id, f.Departure_date, f.Departure_time, f.Flight_status, p.plane_id, fr.Origin_airport, fr.Destination_airport
-        FROM Flight f
-        JOIN Plane p ON f.Plane_id = p.Plane_id
-        JOIN Flying_route fr ON f.Route_id = fr.Route_id
-        WHERE f.Flight_number = %s
-    """, (flight_number,))
-    flight = cursor.fetchone()
-
-    if not flight:
-        cursor.close()
-        conn.close()
-        return None
-    
-    flight['economy_price'] = None
-    flight['business_price'] = None
-
-    cursor.execute("SELECT Route_id, Origin_airport, Destination_airport FROM Flying_route")
-    route = cursor.fetchall()
-
-    cursor.execute("SELECT Plane_id, Manufacturer FROM Plane")
-    plane = cursor.fetchall()
-
-    cursor.execute("SELECT Employee_id, Hebrew_first_name, Hebrew_last_name FROM Pilot")
-    pilots = cursor.fetchall()
-
-    cursor.execute("SELECT Employee_id FROM Pilots_in_flight WHERE Flight_number = %s", (flight_number,))
-    assigned_pilots = {row['Employee_id'] for row in cursor.fetchall()}
-
-    cursor.execute("SELECT Employee_id, Hebrew_first_name, Hebrew_last_name FROM Steward")
-    stewards = cursor.fetchall()
-
-    cursor.execute("SELECT Employee_id FROM Stewards_in_flight WHERE Flight_number = %s", (flight_number,))
-    assigned_stewards = {row['Employee_id'] for row in cursor.fetchall()}
-
-    cursor.execute("SELECT Price, Class_type FROM Flight_pricing WHERE Flight_number = %s", (flight_number,))
-    prices = cursor.fetchall()
-    for p in prices:
-        if p['Class_type'] == 'ECONOMY':
-            flight['economy_price'] = p['Price']
-        elif p['Class_type'] == 'BUSINESS':
-            flight['business_price'] = p['Price']    
-    cursor.close()
-    conn.close()
-
-    return {
-        'flight': flight,
-        'routes': route,
-        'planes': plane,
-        'pilots': pilots,
-        'stewards': stewards,
-        'assigned_pilots': assigned_pilots,
-        'assigned_stewards': assigned_stewards,
-        'error': error
-    }
-# flight and crew management helpers
 
 def handle_flight_update(flight_number):
     # ---- Parse form inputs ----
@@ -337,6 +76,10 @@ def handle_flight_update(flight_number):
                 WHERE Flight_number = %s
                   AND Booking_status = 'ACTIVE'
             """, (flight_number,))
+
+            # Remove crew assignments
+            cursor.execute("DELETE FROM Pilots_in_flight WHERE Flight_number = %s", (flight_number,))
+            cursor.execute("DELETE FROM Stewards_in_flight WHERE Flight_number = %s", (flight_number,))
 
             # Zero prices
             economy_price = 0
@@ -493,7 +236,7 @@ def generate_seats_for_plane(plane_id):
 @handle_errors
 @application.route('/admin')
 def admin_dashboard():
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -518,7 +261,7 @@ def admin_dashboard():
 @handle_errors
 @application.route('/admin/generate_all_seats')
 def admin_fix_existing_seats():
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     conn = get_db_connection()
@@ -570,7 +313,7 @@ def admin_fix_existing_seats():
 @handle_errors
 @application.route('/admin/reports')
 def admin_reports():
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     conn = get_db_connection()
@@ -698,7 +441,7 @@ GROUP BY s.Employee_id;
 @handle_errors
 @application.route('/admin/add_plane', methods=['GET', 'POST'])
 def add_plane():
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
     if request.method == 'POST':
         manufacturer = request.form['manufacturer']
@@ -730,7 +473,7 @@ def add_plane():
 @handle_errors
 @application.route('/admin/add_plane/<int:plane_id>/classes', methods=['GET', 'POST'])
 def add_classes(plane_id):
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -779,7 +522,7 @@ def add_classes(plane_id):
 @handle_errors
 @application.route('/admin/employees')
 def employees():
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     conn = get_db_connection()
@@ -810,7 +553,7 @@ def employees():
 @handle_errors
 @application.route('/admin/employees/add/pilot', methods=['GET', 'POST'])
 def add_pilot():
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
     if request.method == 'POST':
         first = request.form['first_name']
@@ -847,7 +590,7 @@ def add_pilot():
 @handle_errors
 @application.route('/admin/employees/add/steward', methods=['GET', 'POST'])
 def add_steward():
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
     if request.method == 'POST':
         first = request.form['first_name']
@@ -888,7 +631,7 @@ def add_steward():
 @handle_errors
 @application.route('/admin/employees/pilots/<int:pilot_id>/edit', methods=['GET', 'POST'])
 def edit_pilot(pilot_id):
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     conn = get_db_connection()
@@ -929,7 +672,7 @@ def edit_pilot(pilot_id):
 @handle_errors
 @application.route('/admin/employees/Stewards/<int:steward_id>/edit', methods=['GET', 'POST'])
 def edit_steward(steward_id):
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     conn = get_db_connection()
@@ -971,7 +714,7 @@ def edit_steward(steward_id):
 @handle_errors
 @application.route('/admin/employees/pilots/<int:pilot_id>/delete', methods=['POST'])
 def delete_pilot(pilot_id):
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     conn = get_db_connection()
@@ -1003,7 +746,7 @@ def delete_pilot(pilot_id):
 @handle_errors
 @application.route('/admin/employees/stewards/<int:steward_id>/delete', methods=['POST'])
 def delete_steward(steward_id):
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     conn = get_db_connection()
@@ -1037,7 +780,7 @@ def delete_steward(steward_id):
 @handle_errors
 @application.route('/admin/flights', methods=['GET'])
 def admin_flights(): # View and manage flights
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
     
     conn = get_db_connection()
@@ -1092,17 +835,17 @@ def admin_flights(): # View and manage flights
 @handle_errors
 @application.route('/admin/flights/<int:flight_number>/edit', methods=['GET', 'POST'])
 def edit_flight(flight_number):
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     if request.method == 'POST':
         action = request.form.get('action')
 
         if action == 'update_flight':
-            return handle_flight_update(flight_number)
+            return handle_flight_update(flight_number, request, session)
 
         if action == 'update_crew':
-            return handle_crew_update(flight_number)
+            return handle_crew_update(flight_number, request)
 
     context = build_edit_flight_context(flight_number)
     if not context:
@@ -1117,7 +860,7 @@ def edit_flight(flight_number):
 @application.route('/admin/create-flight', methods=['GET', 'POST'])
 def admin_create_flight():
     error = None
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     conn = get_db_connection()
@@ -1287,7 +1030,7 @@ def assign_crew():
             
     conn = get_db_connection()
     cursor = conn.cursor()
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     if request.method == 'POST':
@@ -1298,6 +1041,8 @@ def assign_crew():
         if action == 'delete':
             cursor.execute("DELETE FROM Seats_in_flight WHERE Flight_number=%s", (flight_number,))
             cursor.execute("DELETE FROM Flight_pricing WHERE Flight_number=%s", (flight_number,))
+            cursor.execute("DELETE FROM Pilots_in_flight WHERE Flight_number=%s", (flight_number,))
+            cursor.execute("DELETE FROM Stewards_in_flight WHERE Flight_number=%s", (flight_number,))
             cursor.execute("DELETE FROM Flight WHERE Flight_number=%s", (flight_number,))
             conn.commit()
             cursor.close()
@@ -1382,7 +1127,7 @@ def assign_crew():
 @application.route("/")
 def landing_page():
     """Landing page route that redirects based on user role."""
-    role = get_user_role()
+    role = get_user_role(session)
 
     if role == 'manager':
         return redirect(url_for('admin_dashboard'))
@@ -1488,7 +1233,7 @@ def logout():
 @handle_errors
 @application.route('/search', methods=['GET'])
 def search():
-    if get_user_role() == 'manager':
+    if get_user_role(session) == 'manager':
         abort(403, description="Forbidden")
     
     conn = get_db_connection()
@@ -1535,7 +1280,7 @@ def search():
     cursor.close()
     conn.close()
 
-    return render_template('landing_page.html', role=get_user_role(), flights=flights, airports=airports)
+    return render_template('landing_page.html', role=get_user_role(session), flights=flights, airports=airports)
 
 @handle_errors
 @application.route('/flight_view/<int:flight_number>', methods=['GET','POST'])
@@ -1572,7 +1317,7 @@ def flight_view(flight_number):
     cursor.close()
     conn.close()
 
-    return render_template('flight_view.html', role=get_user_role(), flight=flights)
+    return render_template('flight_view.html', role=get_user_role(session), flight=flights)
 
 @handle_errors
 @application.route('/check_out/<int:flight_number>/passengers', methods=['GET', 'POST'])
@@ -1580,7 +1325,7 @@ def passenger_count(flight_number):
     if request.method == 'POST':
         count = int(request.form['passenger_count'])
         # get user
-        if get_user_role() == 'client':
+        if get_user_role(session) == 'client':
             email = session.get('client_email')
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
@@ -1591,7 +1336,7 @@ def passenger_count(flight_number):
             conn.close()
         else:
             user = None
-        return redirect(url_for('passenger_details', flight_number=flight_number, count=count, role=get_user_role(), user=user))
+        return redirect(url_for('passenger_details', flight_number=flight_number, count=count, role=get_user_role(session), user=user))
 
     return render_template('passenger_count.html', flight_number=flight_number)
 
@@ -1602,7 +1347,7 @@ def passenger_details(flight_number):
     if count < 1 or count > 7:
         abort(400, description="Invalid passenger count")
     if request.method == 'GET':
-        if get_user_role() == 'client':
+        if get_user_role(session) == 'client':
             # Pre-fill with registered client info
             email = session.get('client_email')
             conn = get_db_connection()
@@ -1617,7 +1362,7 @@ def passenger_details(flight_number):
                 flight_number=flight_number,
                 count=count,
                 user=user,
-                role=get_user_role()
+                role=get_user_role(session)
             )
     if request.method == 'POST':
         passengers = []
@@ -1652,7 +1397,7 @@ def passenger_details(flight_number):
         'passenger_details.html',
         flight_number=flight_number,
         count=count,
-        role=get_user_role()
+        role=get_user_role(session)
     )
 
 @handle_errors
@@ -1694,7 +1439,7 @@ def seat_selection(flight_number):
         flight_number=flight_number,
         seats=seat_rows,
         count=count,
-        role=get_user_role()
+        role=get_user_role(session)
     )
 
 @handle_errors
@@ -1773,7 +1518,7 @@ def order_summary(flight_number):
         seats=parsed_seats,
         seat_prices=seat_prices,
         total_price=total_price,
-        role=get_user_role(),
+        role=get_user_role(session),
         flight_number=flight_number
     )
 
@@ -1787,7 +1532,7 @@ def confirm_booking(flight_number):
     cursor = conn.cursor()
 
     # Create booking
-    if get_user_role() == 'client':
+    if get_user_role(session) == 'client':
         email = session.get('client_email')
     else:
         email = passengers[0]['Email']  # Use first passenger's email for guest bookings
@@ -1863,7 +1608,7 @@ def booking_success(Booking_number):
     return render_template(
         'booking_success.html',
         booking=booking,
-        role=get_user_role()
+        role=get_user_role(session)
     )
 
 # Manage bookings
@@ -1872,10 +1617,10 @@ def booking_success(Booking_number):
 @application.route('/manage-booking', methods=['GET', 'POST'])
 def manage_booking():
     if request.method == 'GET':
-        return render_template('manage_booking.html', role=get_user_role())
+        return render_template('manage_booking.html', role=get_user_role(session))
 
     # POST
-    if get_user_role() == 'client':
+    if get_user_role(session) == 'client':
         email = session.get('client_email')
         return redirect(url_for('manage_booking_result', method='registered', email=email))
 
@@ -1991,7 +1736,7 @@ def manage_booking_result():
     return render_template(
         'manage_booking_result.html',
         bookings=bookings,
-        role=get_user_role()
+        role=get_user_role(session)
     )
 
 
@@ -2096,7 +1841,7 @@ def unauthorized(e):
 @handle_errors
 @application.route('/admin/schedules')
 def admin_schedules():
-    if get_user_role() != 'manager':
+    if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
     conn = get_db_connection()
