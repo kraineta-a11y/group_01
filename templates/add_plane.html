@@ -5,38 +5,45 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
 <div class="corner-logo">
   <a href="{{ url_for('landing_page') }}">
     <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
   </a>
 </div>
-    <h1>Add Plane</h1>
-    <form method="post">
 
-        <label>Manufacturer</label>
-        <select name="manufacturer" required>
-            <option value="">Select Manufacturer</option>
-            <option value="BOEING">BOEING</option>
-            <option value="AIRBUS">AIRBUS</option>
-            <option value="DASSAULT">DASSAULT</option>
-        </select>
+<h1>Add Plane</h1>
 
-        <label>Size</label>
-        <select name="size" required>
-            <option value="">Select size</option>
-            <option value="SMALL">SMALL</option>
-            <option value="LARGE">LARGE</option>
-        </select>
+<form method="post">
+    <label>Manufacturer</label>
+    <select name="manufacturer" required>
+        <option value="">Select Manufacturer</option>
+        <option value="BOEING">BOEING</option>
+        <option value="AIRBUS">AIRBUS</option>
+        <option value="DASSAULT">DASSAULT</option>
+    </select>
 
-        <label>Number of seats</label>
-        <input type="number" name="num_seats" min="1" max="350" required>
-        <button type="submit">Continue to classes and seats</button>
-    </form>
+    <label>Size</label>
+    <select name="size" required>
+        <option value="">Select size</option>
+        <option value="SMALL">SMALL</option>
+        <option value="LARGE">LARGE</option>
+    </select>
+
+    <p style="margin-top: 10px; opacity: 0.85;">
+        Number of seats will be calculated automatically based on the class seating you define next.
+    </p>
+
+    <button type="submit">Continue to classes and seats</button>
+</form>
 
 <form method="GET" action="{{ url_for('admin_dashboard') }}">
-  <button type="submit">Back to Admin</button>  
+  <button type="submit">Back to Admin</button>
 </form>
+
 </body>
+</html>
+
 
 
 </html>
