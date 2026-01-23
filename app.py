@@ -928,7 +928,11 @@ def admin_flights():
     if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
-    status_filter = (request.args.get('status') or "").strip().upper()
+    # ⚠️ חשוב: אל תתני לפונקציה הזו לדרוס DELAYED.
+    # אם update_flight_status אצלך דורס — תקני אותו בסעיף 2.
+    update_flight_status()
+
+    status_filter = (request.args.get('status') or "").strip()  # "" = All
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -941,7 +945,7 @@ def admin_flights():
             COUNT(DISTINCT pf.Employee_id) AS pilot_count,
             COUNT(DISTINCT sf.Employee_id) AS steward_count,
             p.Size,
-            f.Flight_status
+            COALESCE(NULLIF(TRIM(UPPER(f.Flight_status)), ''), 'ACTIVE') AS Flight_status
         FROM Flight f
         JOIN Flying_route fr ON f.Route_id = fr.Route_id
         JOIN Plane p ON f.Plane_id = p.Plane_id
@@ -950,34 +954,27 @@ def admin_flights():
     """
 
     params = []
-    if status_filter:
-        query += " WHERE UPPER(TRIM(f.Flight_status)) = %s"
-        params.append(status_filter)
+    if status_filter != "":
+        query += " WHERE TRIM(UPPER(f.Flight_status)) = %s "
+        params.append(status_filter.strip().upper())
 
     query += """
         GROUP BY f.Flight_number, p.Size, fr.Origin_airport, fr.Destination_airport, f.Flight_status
-        ORDER BY f.Flight_number
+        ORDER BY f.Departure_date, f.Departure_time
     """
 
     cursor.execute(query, params)
     flights = cursor.fetchall()
 
-    # ✅ fallback לסטטוס + ניקוי רווחים
-    for f in flights:
-        s = (f.get('Flight_status') or "").strip().upper()
-        f['Flight_status'] = s or "ACTIVE"
-
     cursor.close()
     conn.close()
 
-    # crew readiness
+    # Crew readiness
     for flight in flights:
         if flight['Size'] == 'LARGE':
-            required_pilots = 3
-            required_stewards = 6
+            required_pilots, required_stewards = 3, 6
         else:
-            required_pilots = 2
-            required_stewards = 3
+            required_pilots, required_stewards = 2, 3
 
         flight['ready'] = (
             flight['pilot_count'] == required_pilots and
@@ -996,9 +993,10 @@ def admin_flights():
     return render_template(
         'flights.html',
         flights=flights,
-        selected_status=status_filter,
+        selected_status=status_filter.upper() if status_filter else "",
         status_options=status_options
     )
+
 
 
 @handle_errors
