@@ -13,6 +13,9 @@
 </div>
     <h1>Add Class seating</h1>
 <form method="post">
+    {% if error %}
+  <p style="color: #ffb3b3; font-weight: 600;">{{ error }}</p>
+{% endif %}
     {% if size == 'LARGE' %}
     <h2>Business Class</h2>
     <input name="bus_first_row" placeholder="First row" required>
