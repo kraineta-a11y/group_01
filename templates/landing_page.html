@@ -13,9 +13,10 @@
 </div>
     <h1>Welcome to FLYTAU</h1>
     {% if role == 'guest' %}
-        <p>You are browsing as a guest. <a href="{{ url_for('login') }}">Login</a></p>
+        <p class="top-banner">You are browsing as a guest. <a href="{{ url_for('login') }}">Login</a></p>
     {% else %}
-        <p>You are logged in as a {{ role }}.</p>
+       <p class="top-banner">You are logged in as a {{ role }}.</p>
+
     {% endif %}
 
 <form method="GET" action="{{ url_for('search') }}">
