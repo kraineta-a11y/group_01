@@ -1551,47 +1551,75 @@ def passenger_details(flight_number):
         role=get_user_role(session)
     )
 
+from collections import defaultdict
+
 @handle_errors
 @application.route('/checkout/<int:flight_number>/passengers/seat_selection', methods=['GET', 'POST'])
 def seat_selection(flight_number):
     count = int(request.args.get('count'))
+
+    # פונקציה קטנה כדי לטעון מושבים ולהחזיר אותם בפורמט שלך
+    def load_seat_rows():
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT Row_num, Col_num, Availability
+            FROM Seats_in_flight
+            WHERE Flight_number = %s
+            ORDER BY Row_num, Col_num
+        """, (flight_number,))
+        seats = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        seat_rows = defaultdict(list)
+        for seat in seats:
+            seat_rows[seat['Row_num']].append(seat)
+
+        return dict(seat_rows)
+
     if request.method == 'POST':
         selected_seats = []
         for i in range(1, count + 1):
-            selected_seats.append(request.form[f"seat_{i}"])
+            s = request.form.get(f"seat_{i}")
+            if not s:
+                # חסר מושב -> לא ממשיכים
+                seats = load_seat_rows()
+                return render_template(
+                    'seat_selection.html',
+                    flight_number=flight_number,
+                    seats=seats,
+                    count=count,
+                    role=get_user_role(session),
+                    error="Please choose a seat for every passenger."
+                )
+            selected_seats.append(s)
+
+        # ✅ מניעת בחירת אותו מושב פעמיים
+        if len(set(selected_seats)) != len(selected_seats):
+            seats = load_seat_rows()
+            return render_template(
+                'seat_selection.html',
+                flight_number=flight_number,
+                seats=seats,
+                count=count,
+                role=get_user_role(session),
+                error="You cannot select the same seat more than once. Please choose different seats."
+            )
+
         session['selected_seats'] = selected_seats
         return redirect(url_for('order_summary', flight_number=flight_number))
-    
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
 
-    # Get available seats
-    cursor.execute("""
-        SELECT Row_num, Col_num, Availability
-        FROM Seats_in_flight
-        WHERE Flight_number = %s
-        ORDER BY Row_num, Col_num
-    """, (flight_number,))
-    seats = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    from collections import defaultdict
-
-    seat_rows = defaultdict(list)
-    for seat in seats:
-        seat_rows[seat['Row_num']].append(seat)
-
-    seat_rows = dict(seat_rows)
-
-
+    # GET
+    seats = load_seat_rows()
     return render_template(
         'seat_selection.html',
         flight_number=flight_number,
-        seats=seat_rows,
+        seats=seats,
         count=count,
         role=get_user_role(session)
     )
+
 
 @handle_errors
 @application.route('/checkout/<int:flight_number>/summary', methods=['GET', 'POST'])
