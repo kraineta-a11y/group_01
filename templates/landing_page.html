@@ -19,10 +19,11 @@
 
 
     {% endif %}
-<p class="search-hint">
-  Tip: You can click <strong>Search</strong> without filling any fields to view all available flights.
-</p>
 <form class="search-form" method="GET" action="{{ url_for('search') }}">
+    <small class="search-hint">
+  Tip: You can click <span class="hint-keyword">Search</span> without filling any fields to view all available flights.
+</small>
+
   <label for="origin">From:</label>
   <input list="airports" name="origin" id="origin">
 
