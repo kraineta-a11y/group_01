@@ -470,52 +470,126 @@ def add_plane():
 
     return render_template('add_plane.html')
 
+import string
+
 @handle_errors
 @application.route('/admin/add_plane/<int:plane_id>/classes', methods=['GET', 'POST'])
 def add_classes(plane_id):
     if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT Size FROM Plane WHERE Plane_id = %s", (plane_id,))
+
+    # מושכים גם את מספר המושבים שהוגדר למטוס כדי לוודא התאמה
+    cursor.execute("SELECT Size, Number_of_seats FROM Plane WHERE Plane_id = %s", (plane_id,))
     plane = cursor.fetchone()
+    if not plane:
+        cursor.close()
+        conn.close()
+        abort(404, description="Plane not found")
+
     size = plane['Size']
+    plane_num_seats = int(plane['Number_of_seats'] or 0)
+
+    def seats_count(first_row, last_row, first_col, last_col, class_name):
+        # validate rows
+        if first_row <= 0 or last_row <= 0:
+            return None, f"{class_name}: rows must be positive."
+        if last_row < first_row:
+            return None, f"{class_name}: last row must be >= first row."
+
+        # normalize + validate cols (A-Z בלבד)
+        first_col = (first_col or "").strip().upper()
+        last_col = (last_col or "").strip().upper()
+
+        if len(first_col) != 1 or len(last_col) != 1:
+            return None, f"{class_name}: seat columns must be a single letter (A-Z)."
+        if first_col not in string.ascii_uppercase or last_col not in string.ascii_uppercase:
+            return None, f"{class_name}: seat columns must be A-Z (English letters only)."
+        if last_col < first_col:
+            return None, f"{class_name}: last column must be >= first column."
+
+        rows = last_row - first_row + 1
+        cols = ord(last_col) - ord(first_col) + 1
+        return rows * cols, None
+
     if request.method == 'POST':
-        
+        # ---- parse inputs ----
         if size == 'LARGE':
             bus_first_row = int(request.form['bus_first_row'])
-            bus_last_row = int(request.form['bus_last_row'])
-            bus_first_col = (request.form['bus_first_col'])
-            bus_last_col = (request.form['bus_last_col'])
+            bus_last_row  = int(request.form['bus_last_row'])
+            bus_first_col = request.form['bus_first_col']
+            bus_last_col  = request.form['bus_last_col']
 
-        eco_first_row = int(request.form.get('eco_first_row'))
-        eco_last_row = int(request.form.get('eco_last_row'))
-        eco_first_col = request.form.get('eco_first_col')
-        eco_last_col = request.form.get('eco_last_col')
+        eco_first_row = int(request.form['eco_first_row'])
+        eco_last_row  = int(request.form['eco_last_row'])
+        eco_first_col = request.form['eco_first_col']
+        eco_last_col  = request.form['eco_last_col']
 
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # ---- validate counts per class ----
+        eco_cnt, err = seats_count(eco_first_row, eco_last_row, eco_first_col, eco_last_col, "Economy Class")
+        if err:
+            cursor.close()
+            conn.close()
+            return render_template('add_plane_classes.html', size=size, error=err)
 
+        bus_cnt = 0
+        if size == 'LARGE':
+            bus_cnt, err = seats_count(bus_first_row, bus_last_row, bus_first_col, bus_last_col, "Business Class")
+            if err:
+                cursor.close()
+                conn.close()
+                return render_template('add_plane_classes.html', size=size, error=err)
+
+            # אופציונלי אבל מומלץ: למנוע חפיפה בין מחלקות בשורות
+            overlap = not (bus_last_row < eco_first_row or eco_last_row < bus_first_row)
+            if overlap:
+                cursor.close()
+                conn.close()
+                return render_template(
+                    'add_plane_classes.html',
+                    size=size,
+                    error="Business and Economy rows overlap. Please set non-overlapping row ranges."
+                )
+
+        # ---- validate against plane total seats ----
+        total_defined = eco_cnt + bus_cnt
+        if plane_num_seats and total_defined != plane_num_seats:
+            cursor.close()
+            conn.close()
+            return render_template(
+                'add_plane_classes.html',
+                size=size,
+                error=f"Total seats mismatch: Plane has {plane_num_seats} seats, "
+                      f"but classes define {total_defined} seats."
+            )
+
+        # ---- insert classes ----
         cursor.execute("""
             INSERT INTO Class (Plane_id, Class_type, first_row, last_row, first_col, last_col)
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, (plane_id, 'ECONOMY', eco_first_row, eco_last_row, eco_first_col, eco_last_col))
+        """, (plane_id, 'ECONOMY', eco_first_row, eco_last_row, eco_first_col.strip().upper(), eco_last_col.strip().upper()))
 
         if size == 'LARGE':
             cursor.execute("""
                 INSERT INTO Class (Plane_id, Class_type, first_row, last_row, first_col, last_col)
                 VALUES (%s, %s, %s, %s, %s, %s)
-            """, (plane_id, 'BUSINESS', bus_first_row, bus_last_row, bus_first_col, bus_last_col))
+            """, (plane_id, 'BUSINESS', bus_first_row, bus_last_row, bus_first_col.strip().upper(), bus_last_col.strip().upper()))
+
         conn.commit()
         cursor.close()
         conn.close()
 
-        # generate plane seats 
+        # generate plane seats (רק אחרי שהכל תקין)
         generate_seats_for_plane(plane_id)
 
         return redirect(url_for('admin_dashboard'))
 
+    cursor.close()
+    conn.close()
     return render_template('add_plane_classes.html', size=size)
+
 
 # Admin employee management 
 
