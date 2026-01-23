@@ -1435,6 +1435,13 @@ h1{ text-align: center; }
   font-size: 0.95rem;
   opacity: 0.85;
 }
+.manager-hint{
+  display:block;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
 
 
 
