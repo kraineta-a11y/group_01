@@ -1343,6 +1343,27 @@ form h2, form h3, form strong{
   .seat-row{ grid-auto-columns: 58px; }
 }
 
+/* מחזיר גלילה אופקית */
+.seat-map-scroll{
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+}
+
+/* המפה תהיה ברוחב טבעי שלה (ככה יש מה לגלול) */
+.seat-map{
+  width: max-content;
+  min-width: 100%;
+}
+
+/* כל שורה לא נשברת ונשארת ארוכה */
+.seat-row{
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  width: max-content;
+}
+
 
 
 
