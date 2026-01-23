@@ -1430,6 +1430,12 @@ h1{ text-align: center; }
   opacity: 0.9;
 }
 
+.search-hint{
+  margin: 10px 0 12px;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
 
 
 
