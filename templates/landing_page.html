@@ -21,10 +21,10 @@
 
 <form class="search-form" method="GET" action="{{ url_for('search') }}">
   <label for="origin">From:</label>
-  <input list="airports" name="origin" id="origin" required>
+  <input list="airports" name="origin" id="origin">
 
   <label for="destination">To:</label>
-  <input list="airports" name="destination" id="destination" required>
+  <input list="airports" name="destination" id="destination">
   <input type="date" name="date">
   <datalist id="airports">
     {% for a in airports %}

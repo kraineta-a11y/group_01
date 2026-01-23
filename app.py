@@ -1508,47 +1508,38 @@ def search():
     cursor.execute("SELECT Airport_code FROM Airport")
     airports = cursor.fetchall()
 
-    origin = request.args.get('origin')
+    origin = request.args.get('origin') 
     destination = request.args.get('destination')
     date = request.args.get('date')
-    print(f"Searching flights: {origin} → {destination} on {date}")
-    #Sanity checks
-    if not origin or not destination:
-        return redirect(url_for('landing_page'))
+
     # Implementing search logic
+    query = """
+        SELECT *
+        FROM Flight AS f
+        JOIN Flying_route AS fr ON f.Route_id = fr.Route_id
+        JOIN Flight_pricing AS fp 
+            ON f.Flight_number = fp.Flight_number 
+        AND f.Plane_id = fp.Plane_id
+        WHERE f.Flight_status = 'ACTIVE'
+    """
+
+    params = []
+
+    if origin:
+        query += " AND fr.Origin_airport = %s"
+        params.append(origin)
+
+    if destination:
+        query += " AND fr.Destination_airport = %s"
+        params.append(destination)
+
     if date:
-        query = """
-                SELECT * 
-                FROM 
-                    Flight as f
-                JOIN
-                    Flying_route as fr ON f.Route_id = fr.Route_id
-                JOIN
-                    Flight_pricing as fp ON f.Flight_number = fp.Flight_number AND f.Plane_id = fp.Plane_id
-                WHERE 
-                    fr.Origin_airport = %s AND 
-                    fr.Destination_airport = %s AND 
-                    f.Departure_date = %s AND
-                    f.Flight_status = 'ACTIVE'
-                ORDER BY f.Departure_date, f.Departure_time
-            """
-        cursor.execute(query, (origin, destination, date))
-    else:
-        query = """
-                    SELECT * 
-                    FROM 
-                        Flight as f
-                    JOIN
-                        Flying_route as fr ON f.Route_id = fr.Route_id
-                    JOIN
-                        Flight_pricing as fp ON f.Flight_number = fp.Flight_number AND f.Plane_id = fp.Plane_id
-                    WHERE 
-                        fr.Origin_airport = %s AND 
-                        fr.Destination_airport = %s AND 
-                        f.Flight_status = 'ACTIVE'
-                    ORDER BY f.Departure_date, f.Departure_time
-                """ 
-        cursor.execute(query, (origin, destination))
+        query += " AND f.Departure_date = %s"
+        params.append(date)
+
+    query += " ORDER BY f.Departure_date, f.Departure_time"
+
+    cursor.execute(query, params)
 
     flights = cursor.fetchall()
     for flight in flights:
