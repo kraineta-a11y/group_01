@@ -700,6 +700,8 @@ def add_steward():
 
 # Edit employees
 
+import mysql.connector as mdb
+
 @handle_errors
 @application.route('/admin/employees/pilots/<int:pilot_id>/edit', methods=['GET', 'POST'])
 def edit_pilot(pilot_id):
@@ -709,40 +711,79 @@ def edit_pilot(pilot_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    if request.method == 'POST':
-        long_haul = 'long_haul' in request.form
-        city = request.form['city']
-        street = request.form['street']
-        house_number = request.form['house_number']
-        phone_number = request.form['phone_number']
-        zip_code = request.form['zip_code']
+    try:
+        if request.method == 'POST':
+            first_name = (request.form.get('first_name') or "").strip()
+            last_name  = (request.form.get('last_name')  or "").strip()
 
+            long_haul     = 1 if 'long_haul' in request.form else 0
+            city          = (request.form.get('city') or "").strip()
+            street        = (request.form.get('street') or "").strip()
+            house_number  = (request.form.get('house_number') or "").strip()
+            phone_number  = (request.form.get('phone_number') or "").strip()
+            zip_code      = (request.form.get('zip_code') or "").strip()
+
+            if not first_name or not last_name:
+                pilot = {
+                    "Employee_id": pilot_id,
+                    "Hebrew_first_name": first_name,
+                    "Hebrew_last_name": last_name,
+                    "Long_haul_qualified": long_haul,
+                    "City": city, "Street": street, "House_number": house_number,
+                    "Phone_number": phone_number, "Zip_code": zip_code
+                }
+                return render_template('edit_pilot.html', pilot=pilot, error="First and last name are required.")
+
+            cursor.execute("""
+                UPDATE Pilot
+                SET Hebrew_first_name = %s,
+                    Hebrew_last_name  = %s,
+                    Long_haul_qualified = %s,
+                    City = %s,
+                    Street = %s,
+                    House_number = %s,
+                    Phone_number = %s,
+                    Zip_code = %s
+                WHERE Employee_id = %s
+            """, (first_name, last_name, long_haul, city, street, house_number, phone_number, zip_code, pilot_id))
+
+            conn.commit()
+            return redirect(url_for('employees'))
+
+        # GET
         cursor.execute("""
-            UPDATE Pilot
-            SET Long_haul_qualified = %s, City = %s, Street = %s, House_number = %s, Phone_number = %s, Zip_code = %s
-                       
+            SELECT Employee_id, Hebrew_first_name, Hebrew_last_name,
+                   Long_haul_qualified, City, Street, House_number, Phone_number, Zip_code
+            FROM Pilot
             WHERE Employee_id = %s
-        """, (long_haul, city, street, house_number, phone_number, zip_code, pilot_id))
+        """, (pilot_id,))
+        pilot = cursor.fetchone()
 
-        conn.commit()
+        if not pilot:
+            abort(404, description="Pilot not found")
+
+        return render_template('edit_pilot.html', pilot=pilot)
+
+    except mdb.Error as e:
+        conn.rollback()
+        # מחזירים למסך עם הודעה במקום קריסה
+        cursor.execute("""
+            SELECT Employee_id, Hebrew_first_name, Hebrew_last_name,
+                   Long_haul_qualified, City, Street, House_number, Phone_number, Zip_code
+            FROM Pilot
+            WHERE Employee_id = %s
+        """, (pilot_id,))
+        pilot = cursor.fetchone()
+        return render_template('edit_pilot.html', pilot=pilot, error=f"Database error: {e}")
+
+    finally:
         cursor.close()
         conn.close()
 
-        return redirect(url_for('employees'))
-
-    cursor.execute("""
-        SELECT Employee_id, Hebrew_first_name, Hebrew_last_name, Long_haul_qualified, City, Street, House_number, Phone_number, Zip_code
-        FROM Pilot WHERE Employee_id = %s
-    """, (pilot_id,))
-    pilot = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
-
-    return render_template('edit_pilot.html', pilot=pilot)
+import mysql.connector as mdb
 
 @handle_errors
-@application.route('/admin/employees/Stewards/<int:steward_id>/edit', methods=['GET', 'POST'])
+@application.route('/admin/employees/stewards/<int:steward_id>/edit', methods=['GET', 'POST'])
 def edit_steward(steward_id):
     if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
@@ -750,36 +791,74 @@ def edit_steward(steward_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    if request.method == 'POST':
-        long_haul = 'long_haul' in request.form
-        city = request.form['city']
-        street = request.form['street']
-        house_number = request.form['house_number']
-        phone_number = request.form['phone_number']
-        zip_code = request.form['zip_code']
+    try:
+        if request.method == 'POST':
+            first_name = (request.form.get('first_name') or "").strip()
+            last_name  = (request.form.get('last_name')  or "").strip()
 
+            long_haul     = 1 if 'long_haul' in request.form else 0
+            city          = (request.form.get('city') or "").strip()
+            street        = (request.form.get('street') or "").strip()
+            house_number  = (request.form.get('house_number') or "").strip()
+            phone_number  = (request.form.get('phone_number') or "").strip()
+            zip_code      = (request.form.get('zip_code') or "").strip()
+
+            if not first_name or not last_name:
+                steward = {
+                    "Employee_id": steward_id,
+                    "Hebrew_first_name": first_name,
+                    "Hebrew_last_name": last_name,
+                    "Long_haul_qualified": long_haul,
+                    "City": city, "Street": street, "House_number": house_number,
+                    "Phone_number": phone_number, "Zip_code": zip_code
+                }
+                return render_template('edit_steward.html', steward=steward, error="First and last name are required.")
+
+            cursor.execute("""
+                UPDATE Steward
+                SET Hebrew_first_name = %s,
+                    Hebrew_last_name  = %s,
+                    Long_haul_qualified = %s,
+                    City = %s,
+                    Street = %s,
+                    House_number = %s,
+                    Phone_number = %s,
+                    Zip_code = %s
+                WHERE Employee_id = %s
+            """, (first_name, last_name, long_haul, city, street, house_number, phone_number, zip_code, steward_id))
+
+            conn.commit()
+            return redirect(url_for('employees'))
+
+        # GET
         cursor.execute("""
-            UPDATE Steward
-            SET Long_haul_qualified = %s , City = %s, Street = %s, House_number = %s, Phone_number = %s, Zip_code = %s
+            SELECT Employee_id, Hebrew_first_name, Hebrew_last_name,
+                   Long_haul_qualified, City, Street, House_number, Phone_number, Zip_code
+            FROM Steward
             WHERE Employee_id = %s
-        """, (long_haul, city, street, house_number, phone_number, zip_code, steward_id))
+        """, (steward_id,))
+        steward = cursor.fetchone()
 
-        conn.commit()
+        if not steward:
+            abort(404, description="Steward not found")
+
+        return render_template('edit_steward.html', steward=steward)
+
+    except mdb.Error as e:
+        conn.rollback()
+        cursor.execute("""
+            SELECT Employee_id, Hebrew_first_name, Hebrew_last_name,
+                   Long_haul_qualified, City, Street, House_number, Phone_number, Zip_code
+            FROM Steward
+            WHERE Employee_id = %s
+        """, (steward_id,))
+        steward = cursor.fetchone()
+        return render_template('edit_steward.html', steward=steward, error=f"Database error: {e}")
+
+    finally:
         cursor.close()
         conn.close()
 
-        return redirect(url_for('employees'))
-
-    cursor.execute("""
-        SELECT Employee_id, Hebrew_first_name, Hebrew_last_name, Long_haul_qualified, City, Street, House_number, Phone_number, Zip_code
-        FROM Steward WHERE Employee_id = %s
-    """, (steward_id,))
-    steward = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
-
-    return render_template('edit_steward.html', steward=steward)
 
 # Delete employees
 
