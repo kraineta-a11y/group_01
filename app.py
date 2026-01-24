@@ -866,19 +866,30 @@ def add_classes():
             return render_template('add_plane_classes.html', size=size, error=err)
 
         # ---- validate business + overlap ----
-        bus_cnt = 0
-        if size == 'LARGE':
-            bus_cnt, err = seats_count(bus_first_row, bus_last_row, bus_first_col, bus_last_col, "Business Class")
-            if err:
-                return render_template('add_plane_classes.html', size=size, error=err)
+# ---- validate business + "no gap" rule ----
+bus_cnt = 0
+if size == 'LARGE':
+    bus_cnt, err = seats_count(bus_first_row, bus_last_row, bus_first_col, bus_last_col, "Business Class")
+    if err:
+        return render_template('add_plane_classes.html', size=size, error=err)
 
-            overlap = not (bus_last_row < eco_first_row or eco_last_row < bus_first_row)
-            if overlap:
-                return render_template(
-                    'add_plane_classes.html',
-                    size=size,
-                    error="Business and Economy rows overlap. Please set non-overlapping row ranges."
-                )
+    # Rule: Economy must start immediately after Business ends (no gaps, no overlaps)
+    expected_eco_first = bus_last_row + 1
+    if eco_first_row != expected_eco_first:
+        return render_template(
+            'add_plane_classes.html',
+            size=size,
+            error=f"Not logical: Economy must start at row {expected_eco_first} because Business ends at row {bus_last_row}."
+        )
+
+    # (Optional extra safety) Ensure economy doesn't end before it starts
+    if eco_last_row < eco_first_row:
+        return render_template(
+            'add_plane_classes.html',
+            size=size,
+            error="Economy Class: last row must be >= first row."
+        )
+
 
         total_seats = eco_cnt + bus_cnt
         class_num = 2 if size == 'LARGE' else 1
