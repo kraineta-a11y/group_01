@@ -1,17 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Error - FLYTAU</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error - FLYTAU</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-<div class="corner-logo">
-  <a href="{{ url_for('landing_page') }}">
-    <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
-  </a>
-</div>
-    <h1>Oops! Something went wrong</h1>
-    <p>{{ error_message or "An unexpected error occurred. Please try again later." }}</p>
-    <a href="{{ url_for('landing_page') }}">Go back to home</a>
+
+<body class="error-body">
+
+  <div class="corner-logo">
+    <a href="{{ url_for('landing_page') }}">
+      <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
+    </a>
+  </div>
+
+  <main class="error-wrap">
+    <h1 class="error-title">Oops! Something went wrong</h1>
+
+    <section class="error-card">
+      <div class="error-banner">
+        {{ error_message or "An unexpected error occurred. Please try again later." }}
+      </div>
+
+      <a class="back-home" href="{{ url_for('landing_page') }}">Go back to home</a>
+    </section>
+  </main>
+
 </body>
 </html>
