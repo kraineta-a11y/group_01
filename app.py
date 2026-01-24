@@ -451,6 +451,69 @@ def admin_graph():
 
 @handle_errors
 @application.route('/admin/generate_all_seats')
+# Add this function near generate_seats_for_plane
+def ensure_all_seats_exist():
+    """Ensure seats exist for all planes and flights. Adds missing ones idempotently."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # 1. Ensure seats for all planes
+    total_seats_added = 0
+    cursor.execute("SELECT Plane_id FROM Plane")
+    planes = cursor.fetchall()
+
+    for plane in planes:
+        plane_id = plane['Plane_id']
+
+        # Check if seats already exist for this plane
+        cursor.execute("SELECT 1 FROM Seat WHERE Plane_id = %s LIMIT 1", (plane_id,))
+        if not cursor.fetchone():
+            # Seats missing, generate them
+            generate_seats_for_plane(plane_id)
+
+    # 2. Ensure seats in flight for all flights
+    cursor.execute("SELECT Flight_number, Plane_id FROM Flight")
+    flights = cursor.fetchall()
+
+    for flight in flights:
+        flight_number = flight['Flight_number']
+        plane_id = flight['Plane_id']
+
+        # Check if seats in flight already exist for this flight
+        cursor.execute("SELECT 1 FROM Seats_in_flight WHERE Flight_number = %s LIMIT 1", (flight_number,))
+        if not cursor.fetchone():
+            # Seats missing, generate them based on plane classes
+            cursor.execute("""
+                SELECT Class_type, first_row, last_row, first_col, last_col
+                FROM Class
+                WHERE Plane_id = %s
+            """, (plane_id,))
+            classes = cursor.fetchall()
+            if seats_data:
+                total_seats_added += len(seats_data)
+
+
+            seats_data = []
+            for c in classes:
+                rows = range(c['first_row'], c['last_row'] + 1)
+                cols = string.ascii_uppercase[
+                    string.ascii_uppercase.index(c['first_col']):
+                    string.ascii_uppercase.index(c['last_col']) + 1
+                ]
+                for row in rows:
+                    for col in cols:
+                        seats_data.append((flight_number, plane_id, row, col, 1))  # Availability = 1 (available)
+
+            if seats_data:
+                cursor.executemany("""
+                    INSERT INTO Seats_in_flight (Flight_number, Plane_id, Row_num, Col_num, Availability)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, seats_data)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return f"Done. Seats updated: {total_seats_added}"
 def admin_fix_existing_seats():
     if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
