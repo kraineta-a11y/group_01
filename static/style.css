@@ -1518,6 +1518,64 @@ h1{ text-align: center; }
   text-decoration: underline;
 }
 
+/* --- Error page fixes (paste at END of style.css) --- */
+.error-body{
+  min-height: 100vh;
+  margin: 0;
+}
+
+.error-wrap{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+  padding: 48px 16px;
+  box-sizing: border-box;
+}
+
+.error-title{
+  margin: 0;
+}
+
+.error-card{
+  width: min(1100px, 92vw);
+  padding: 26px 26px 22px;
+  border-radius: 22px;
+  box-sizing: border-box;
+  /* אם יש לך מסגרת אדומה/מוזרה — זה יבטל אותה */
+  border: none !important;
+  outline: none !important;
+}
+
+.error-banner{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 18px 20px;
+  border-radius: 18px;
+  font-weight: 600;
+  /* חשוב: מונע “בריחה” של טקסט/רוחבים */
+  overflow-wrap: anywhere;
+}
+
+.back-home{
+  display: inline-block;
+  margin-top: 18px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* לוודא שהלוגו לא “דוחף” תוכן */
+.corner-logo{
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+}
+
 
 
 
