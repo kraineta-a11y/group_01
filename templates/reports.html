@@ -56,6 +56,23 @@
   </tr>
   {% endfor %}
 </table>
+    <br>
+<h1>Monthly Cancellation Rate</h1>
+
+<table border="1">
+  <tr>
+    <th>Month</th>
+    <th>Cancellation Rate (%)</th>
+  </tr>
+
+  {% for r in cancellation_report %}
+  <tr>
+    <td>{{ r.ym }}</td>
+    <td>{{ r.cancellation_rate_pct }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
 <form method="GET" action="{{ url_for('admin_dashboard') }}">
   <button type="submit">Back to Admin</button>  
 </form>
