@@ -36,6 +36,8 @@
         <input name="email" placeholder="Email" required>
        <label class="field-label" for="birthdate_{{ i }}">Birth Date</label>
 <input id="birthdate_{{ i }}" name="birthdate" type="date" required aria-label="Birth Date">
+    <input name="phone_number" placeholder="Phone Number" value="{{ user.Phone_number }}" required>
+
       {% endif %}
     </select>
   {% endif %}
