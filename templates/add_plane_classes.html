@@ -17,16 +17,15 @@
   <form method="post" id="classForm">
 
     <!-- ONE message box only (server + client). Hidden by default -->
-    <div id="msgBox" class="form-error" style="display:none;"></div>
+    <div id="msgBox" class="form-error" hidden></div>
 
-    <!-- If server returned an error, show it inside the same box -->
     {% if error %}
       <script>
         document.addEventListener('DOMContentLoaded', () => {
           const box = document.getElementById('msgBox');
           if (!box) return;
           box.textContent = {{ error|tojson }};
-          box.style.display = 'block';
+          box.hidden = false;
           box.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
       </script>
@@ -73,20 +72,19 @@
 
       function showError(msg) {
         msgBox.textContent = msg;
-        msgBox.style.display = 'block';
+        msgBox.hidden = false;
         msgBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
       function hideError() {
         msgBox.textContent = '';
-        msgBox.style.display = 'none';
+        msgBox.hidden = true;
       }
 
-      // Hide message as soon as the user edits any field
+      // Hide message as soon as the user edits
       form.querySelectorAll('input').forEach(inp => inp.addEventListener('input', hideError));
 
       form.addEventListener('submit', (e) => {
-        // Clear client-side message before validating
         hideError();
 
         const busLastEl  = form.querySelector('input[name="bus_last_row"]'); // exists only for LARGE
@@ -104,7 +102,7 @@
           return;
         }
 
-        // Rule 2: Economy must start immediately after Business ends (no gaps, no overlaps)
+        // Rule 2: Economy must start immediately after Business ends
         if (busLastEl) {
           const busLast = parseInt(busLastEl.value, 10);
           if (!Number.isNaN(busLast) && !Number.isNaN(ecoFirst) && ecoFirst !== busLast + 1) {
@@ -119,5 +117,6 @@
   </script>
 </body>
 </html>
+
 
 
