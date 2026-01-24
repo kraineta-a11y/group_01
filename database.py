@@ -111,8 +111,9 @@ def get_available_planes(flight_number):
     conn.close()
     return results
 
+# In get_available_staff:
 def get_available_staff(flight_number, employee_table, assignment_table, extra_conditions=""):
-    """Return staff members not assigned to conflicting flights."""
+    """Return staff members not assigned to conflicting flights and located at the origin."""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -135,6 +136,7 @@ def get_available_staff(flight_number, employee_table, assignment_table, extra_c
     )
 
     arr_dt = dep_dt + timedelta(minutes=flight['Duration'])
+    origin = flight['Origin_airport']
 
     query = f"""
         SELECT e.Employee_id,
@@ -153,9 +155,29 @@ def get_available_staff(flight_number, employee_table, assignment_table, extra_c
             AND TIMESTAMP(f2.Departure_date, f2.Departure_time)
                 + INTERVAL fr2.Duration MINUTE > %s
         )
+        AND (
+            -- Last flight before dep_dt landed at origin (or no previous flight)
+            (SELECT fr2.Destination_airport
+             FROM {assignment_table} a2
+             JOIN Flight f2 ON a2.Flight_number = f2.Flight_number
+             JOIN Flying_route fr2 ON f2.Route_id = fr2.Route_id
+             WHERE a2.Employee_id = e.Employee_id
+             AND TIMESTAMP(f2.Departure_date, f2.Departure_time) < %s
+             ORDER BY TIMESTAMP(f2.Departure_date, f2.Departure_time) DESC
+             LIMIT 1) IS NULL
+            OR
+            (SELECT fr2.Destination_airport
+             FROM {assignment_table} a2
+             JOIN Flight f2 ON a2.Flight_number = f2.Flight_number
+             JOIN Flying_route fr2 ON f2.Route_id = fr2.Route_id
+             WHERE a2.Employee_id = e.Employee_id
+             AND TIMESTAMP(f2.Departure_date, f2.Departure_time) < %s
+             ORDER BY TIMESTAMP(f2.Departure_date, f2.Departure_time) DESC
+             LIMIT 1) = %s
+        )
     """
 
-    cursor.execute(query, (arr_dt, dep_dt))
+    cursor.execute(query, (arr_dt, dep_dt, dep_dt, dep_dt, origin))
     result = cursor.fetchall()
 
     cursor.close()
