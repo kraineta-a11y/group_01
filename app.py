@@ -1761,7 +1761,7 @@ def confirm_booking(flight_number):
                 "INSERT INTO Client (Email, English_first_name, English_last_name) VALUES (%s, %s, %s)",
                 (email, first_name, last_name)
             )
-            cursor.exectue(
+            cursor.execute(
                 "INSERT INTO Phone_numbers (Email, Phone_number) VALUES (%s, %s)",
                 (email,phone_number)
             )
@@ -1876,7 +1876,8 @@ def manage_booking_result():
             SELECT *
             FROM Booking
             WHERE Booking_number = %s
-              AND Email = %s
+            AND Email = %s
+            AND Booking_status = 'ACTIVE'
         """, (booking_number, email))
         bookings = cursor.fetchall()
 
