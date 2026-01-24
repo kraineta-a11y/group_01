@@ -16,11 +16,12 @@
 
 <form method="post" id="classForm">
 
-    {% if error %}
-      <div class="error-box">
-            {{ error }}
-        </div>
-    {% endif %}
+<div class="form-container">
+  {% if error %}
+    <div class="alert alert-danger form-alert">
+      {{ error }}
+    </div>
+  {% endif %}
 
     <div class="form-note">
       Number of seats will be calculated automatically based on the rows and columns you define below.
