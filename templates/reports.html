@@ -72,6 +72,31 @@
   </tr>
   {% endfor %}
 </table>
+    <br>
+<h1>Plane Monthly Utilization</h1>
+
+<table border="1">
+  <tr>
+    <th>Plane ID</th>
+    <th>Month</th>
+    <th>Cancelled</th>
+    <th>Performed</th>
+    <th>Utilization (%)</th>
+    <th>Dominant Routes</th>
+  </tr>
+
+  {% for r in utilization_report %}
+  <tr>
+    <td>{{ r.Plane_id }}</td>
+    <td>{{ r.ym }}</td>
+    <td>{{ r.cancelled_cnt }}</td>
+    <td>{{ r.performed_cnt }}</td>
+    <td>{{ r.utilization_pct|round(2) }}</td>
+    <td>{{ r.dominant_routes }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
 
 <form method="GET" action="{{ url_for('admin_dashboard') }}">
   <button type="submit">Back to Admin</button>  
