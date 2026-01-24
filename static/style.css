@@ -1613,6 +1613,80 @@ h1{ text-align: center; }
   margin-right: 0;
   position: static !important;  /* אם היה absolute/fixed */
 }
+/* Prevent inputs from overflowing containers */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* The main card */
+.form-container {
+  width: min(900px, 92vw);
+  margin: 90px auto 24px;
+  padding: 28px;
+  border-radius: 22px;
+  background: rgba(20, 45, 95, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  overflow: hidden; /* important */
+}
+
+.form-container h2 {
+  margin: 22px 0 10px;
+}
+
+.form-note {
+  width: 100%;
+  margin: 12px 0 18px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* Inputs always fit the card */
+.form-container input {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  margin: 10px 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+}
+
+.form-container input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.form-container input:focus {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.form-container button {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Error box inside the card */
+.form-alert {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
 
 
 
