@@ -1,122 +1,123 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FLYTAU ADMIN- Add Classes</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>FLYTAU ADMIN- Add Classes</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
-<div class="corner-logo">
-  <a href="{{ url_for('landing_page') }}">
-    <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
-  </a>
-</div>
-
-<h1>Add Class seating</h1>
-
-<form method="post" id="classForm">
-
-  <!-- Unified message box (hidden by default, shown only when there's text) -->
-  <div id="msgBox" class="form-error" style="display:none;"></div>
-
-  {% if error %}
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const box = document.getElementById('msgBox');
-        if (!box) return;
-        box.textContent = {{ error|tojson }};
-        box.style.display = 'block';
-        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-    </script>
-  {% endif %}
-
-  <div class="form-note">
-    Number of seats will be calculated automatically based on the rows and columns you define below.
+  <div class="corner-logo">
+    <a href="{{ url_for('landing_page') }}">
+      <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
+    </a>
   </div>
 
-  {% if size == 'LARGE' %}
-    <h2>Business Class</h2>
+  <h1>Add Class seating</h1>
 
-    <input type="number" name="bus_first_row" placeholder="First row" min="1" required>
-    <input type="number" name="bus_last_row"  placeholder="Last row"  min="1" required>
+  <form method="post" id="classForm">
 
-    <input type="text" name="bus_first_col" placeholder="First column (A-Z)"
+    <!-- ONE message box only (server + client). Hidden by default -->
+    <div id="msgBox" class="form-error" style="display:none;"></div>
+
+    <!-- If server returned an error, show it inside the same box -->
+    {% if error %}
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const box = document.getElementById('msgBox');
+          if (!box) return;
+          box.textContent = {{ error|tojson }};
+          box.style.display = 'block';
+          box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      </script>
+    {% endif %}
+
+    <div class="form-note">
+      Number of seats will be calculated automatically based on the rows and columns you define below.
+    </div>
+
+    {% if size == 'LARGE' %}
+      <h2>Business Class</h2>
+
+      <input type="number" name="bus_first_row" placeholder="First row" min="1" required>
+      <input type="number" name="bus_last_row"  placeholder="Last row"  min="1" required>
+
+      <input type="text" name="bus_first_col" placeholder="First column (A-Z)"
+             maxlength="1" pattern="[A-Za-z]" required>
+      <input type="text" name="bus_last_col"  placeholder="Last column (A-Z)"
+             maxlength="1" pattern="[A-Za-z]" required>
+    {% endif %}
+
+    <h2>Economy Class</h2>
+
+    <input type="number" name="eco_first_row" placeholder="First row" min="1" required>
+    <input type="number" name="eco_last_row"  placeholder="Last row"  min="1" required>
+
+    <input type="text" name="eco_first_col" placeholder="First column (A-Z)"
            maxlength="1" pattern="[A-Za-z]" required>
-    <input type="text" name="bus_last_col"  placeholder="Last column (A-Z)"
+    <input type="text" name="eco_last_col"  placeholder="Last column (A-Z)"
            maxlength="1" pattern="[A-Za-z]" required>
-  {% endif %}
 
-  <h2>Economy Class</h2>
+    <button type="submit">Save Classes</button>
+  </form>
 
-  <input type="number" name="eco_first_row" placeholder="First row" min="1" required>
-  <input type="number" name="eco_last_row"  placeholder="Last row"  min="1" required>
+  <form method="GET" action="{{ url_for('admin_dashboard') }}">
+    <button type="submit">Back to Admin</button>
+  </form>
 
-  <input type="text" name="eco_first_col" placeholder="First column (A-Z)"
-         maxlength="1" pattern="[A-Za-z]" required>
-  <input type="text" name="eco_last_col"  placeholder="Last column (A-Z)"
-         maxlength="1" pattern="[A-Za-z]" required>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('classForm');
+      const msgBox = document.getElementById('msgBox');
+      if (!form || !msgBox) return;
 
-  <button type="submit">Save Classes</button>
-</form>
-
-<form method="GET" action="{{ url_for('admin_dashboard') }}">
-  <button type="submit">Back to Admin</button>
-</form>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('classForm');
-  const msgBox = document.getElementById('msgBox');
-  if (!form || !msgBox) return;
-
-  function showError(msg) {
-    msgBox.textContent = msg;
-    msgBox.style.display = 'block';
-    msgBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-
-  function hideError() {
-    msgBox.textContent = '';
-    msgBox.style.display = 'none';
-  }
-
-  // Clear message when user edits
-  form.querySelectorAll('input').forEach(inp => inp.addEventListener('input', hideError));
-
-  form.addEventListener('submit', (e) => {
-    // Clear only client-side message before validating
-    hideError();
-
-    const busLastEl  = form.querySelector('input[name="bus_last_row"]');   // exists only for LARGE
-    const ecoFirstEl = form.querySelector('input[name="eco_first_row"]');
-    const ecoLastEl  = form.querySelector('input[name="eco_last_row"]');
-
-    const ecoFirst = parseInt(ecoFirstEl.value, 10);
-    const ecoLast  = parseInt(ecoLastEl.value, 10);
-
-    // Rule 1: Economy range must be valid
-    if (!Number.isNaN(ecoFirst) && !Number.isNaN(ecoLast) && ecoLast < ecoFirst) {
-      e.preventDefault();
-      showError("Not logical: Economy last row must be >= first row.");
-      ecoLastEl.focus();
-      return;
-    }
-
-    // Rule 2: No gap between Business and Economy (only if Business exists)
-    if (busLastEl) {
-      const busLast = parseInt(busLastEl.value, 10);
-      if (!Number.isNaN(busLast) && !Number.isNaN(ecoFirst) && ecoFirst !== busLast + 1) {
-        e.preventDefault();
-        showError(`Not logical: Economy must start at row ${busLast + 1} because Business ends at row ${busLast}.`);
-        ecoFirstEl.focus();
-        return;
+      function showError(msg) {
+        msgBox.textContent = msg;
+        msgBox.style.display = 'block';
+        msgBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-    }
-  });
-});
-</script>
 
+      function hideError() {
+        msgBox.textContent = '';
+        msgBox.style.display = 'none';
+      }
+
+      // Hide message as soon as the user edits any field
+      form.querySelectorAll('input').forEach(inp => inp.addEventListener('input', hideError));
+
+      form.addEventListener('submit', (e) => {
+        // Clear client-side message before validating
+        hideError();
+
+        const busLastEl  = form.querySelector('input[name="bus_last_row"]'); // exists only for LARGE
+        const ecoFirstEl = form.querySelector('input[name="eco_first_row"]');
+        const ecoLastEl  = form.querySelector('input[name="eco_last_row"]');
+
+        const ecoFirst = parseInt(ecoFirstEl.value, 10);
+        const ecoLast  = parseInt(ecoLastEl.value, 10);
+
+        // Rule 1: Economy last row must be >= first row
+        if (!Number.isNaN(ecoFirst) && !Number.isNaN(ecoLast) && ecoLast < ecoFirst) {
+          e.preventDefault();
+          showError("Not logical: Economy last row must be >= first row.");
+          ecoLastEl.focus();
+          return;
+        }
+
+        // Rule 2: Economy must start immediately after Business ends (no gaps, no overlaps)
+        if (busLastEl) {
+          const busLast = parseInt(busLastEl.value, 10);
+          if (!Number.isNaN(busLast) && !Number.isNaN(ecoFirst) && ecoFirst !== busLast + 1) {
+            e.preventDefault();
+            showError(`Not logical: Economy must start at row ${busLast + 1} because Business ends at row ${busLast}.`);
+            ecoFirstEl.focus();
+            return;
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>
+
 
