@@ -54,23 +54,30 @@
 </form>
 
 <script>
-  // Rule: no "gap" between classes.
-  // If Business exists (size == LARGE), then Economy first row must be Business last row + 1.
-  document.getElementById('classForm').addEventListener('submit', function (e) {
-    const busLastEl = document.getElementById('bus_last_row'); // exists only when LARGE
-    if (!busLastEl) return; // no business class -> nothing to validate here
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('form[method="post"]');
+  if (!form) return;
 
-    const busLast = parseInt(busLastEl.value, 10);
-    const ecoFirst = parseInt(document.getElementById('eco_first_row').value, 10);
+  form.addEventListener('submit', (e) => {
+    const busLastEl  = form.querySelector('input[name="bus_last_row"]');
+    const ecoFirstEl = form.querySelector('input[name="eco_first_row"]');
 
+    // אם אין ביזנס (לא LARGE) אין מה לבדוק
+    if (!busLastEl || !ecoFirstEl) return;
+
+    const busLast  = parseInt(busLastEl.value, 10);
+    const ecoFirst = parseInt(ecoFirstEl.value, 10);
     if (Number.isNaN(busLast) || Number.isNaN(ecoFirst)) return;
 
     if (ecoFirst !== busLast + 1) {
-      e.preventDefault(); // stop POST -> prevents creating/updating classes
+      e.preventDefault(); // <- זה מה שעוצר יצירה
       alert(`Not logical: Economy must start at row ${busLast + 1} because Business ends at row ${busLast}.`);
+      ecoFirstEl.focus();
     }
   });
+});
 </script>
+
 
 </body>
 </html>
