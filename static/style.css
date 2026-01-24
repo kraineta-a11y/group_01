@@ -1585,6 +1585,19 @@ h1{ text-align: center; }
   margin: 0 !important;
   border: 0 !important;
 }
+.form-container{
+  width: min(720px, 92vw);
+  margin: 0 auto;
+}
+
+.form-alert{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0 18px;
+  position: static; /* חשוב אם היה absolute/fixed */
+}
+
 
 
 
