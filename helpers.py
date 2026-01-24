@@ -56,7 +56,7 @@ def generate_seats_for_plane(plane_id):
         for row in rows:
             for col in cols:
                 cursor.execute("""
-                    INSERT INTO Seat (Plane_id, Row_num, Col_num, Class_type)
+                    INSERT IGNORE INTO Seat (Plane_id, Row_num, Col_num, Class_type)
                     VALUES (%s, %s, %s, %s)
                 """, (plane_id, row, col, c['Class_type']))
 
