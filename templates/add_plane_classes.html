@@ -16,12 +16,11 @@
 
 <form method="post" id="classForm">
 
-<div id="clientError" class="form-error" style="display:none;"></div>
-
-{% if error %}
-  <div class="form-error">{{ error }}</div>
-{% endif %}
-
+  <!-- One unified error box (server + client) -->
+  <div id="msgBox" class="form-error"
+       style="{% if error %}display:block{% else %}display:none{% endif %};">
+    {% if error %}{{ error }}{% endif %}
+  </div>
 
   <div class="form-note">
     Number of seats will be calculated automatically based on the rows and columns you define below.
@@ -30,23 +29,23 @@
   {% if size == 'LARGE' %}
     <h2>Business Class</h2>
 
-    <input type="number" id="bus_first_row" name="bus_first_row" placeholder="First row" min="1" required>
-    <input type="number" id="bus_last_row"  name="bus_last_row"  placeholder="Last row"  min="1" required>
+    <input type="number" name="bus_first_row" placeholder="First row" min="1" required>
+    <input type="number" name="bus_last_row"  placeholder="Last row"  min="1" required>
 
-    <input type="text" id="bus_first_col" name="bus_first_col" placeholder="First column (A-Z)"
+    <input type="text" name="bus_first_col" placeholder="First column (A-Z)"
            maxlength="1" pattern="[A-Za-z]" required>
-    <input type="text" id="bus_last_col"  name="bus_last_col"  placeholder="Last column (A-Z)"
+    <input type="text" name="bus_last_col"  placeholder="Last column (A-Z)"
            maxlength="1" pattern="[A-Za-z]" required>
   {% endif %}
 
   <h2>Economy Class</h2>
 
-  <input type="number" id="eco_first_row" name="eco_first_row" placeholder="First row" min="1" required>
-  <input type="number" id="eco_last_row"  name="eco_last_row"  placeholder="Last row"  min="1" required>
+  <input type="number" name="eco_first_row" placeholder="First row" min="1" required>
+  <input type="number" name="eco_last_row"  placeholder="Last row"  min="1" required>
 
-  <input type="text" id="eco_first_col" name="eco_first_col" placeholder="First column (A-Z)"
+  <input type="text" name="eco_first_col" placeholder="First column (A-Z)"
          maxlength="1" pattern="[A-Za-z]" required>
-  <input type="text" id="eco_last_col"  name="eco_last_col"  placeholder="Last column (A-Z)"
+  <input type="text" name="eco_last_col"  placeholder="Last column (A-Z)"
          maxlength="1" pattern="[A-Za-z]" required>
 
   <button type="submit">Save Classes</button>
@@ -58,60 +57,58 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('form[method="post"]');
-  const clientError = document.getElementById('clientError');
-  if (!form || !clientError) return;
+  const form = document.getElementById('classForm');
+  const msgBox = document.getElementById('msgBox');
+  if (!form || !msgBox) return;
 
   function showError(msg) {
-    clientError.textContent = msg;
-    clientError.style.display = 'block';
-    // גלילה למעלה כדי שההודעה תיראה
-    clientError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    msgBox.textContent = msg;
+    msgBox.style.display = 'block';
+    msgBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   function clearError() {
-    clientError.textContent = '';
-    clientError.style.display = 'none';
+    // חשוב: לא מוחק שגיאת שרת אם היא כבר מוצגת
+    // אבל ברגע שמתחילים להקליד שוב, כן ננקה
+    msgBox.textContent = '';
+    msgBox.style.display = 'none';
   }
 
-  // נקה הודעה כשמשנים שדות
-  form.querySelectorAll('input').forEach(inp => {
-    inp.addEventListener('input', clearError);
-  });
+  form.querySelectorAll('input').forEach(inp => inp.addEventListener('input', clearError));
 
   form.addEventListener('submit', (e) => {
-    clearError();
+    // נקה רק הודעת צד-לקוח לפני בדיקה
+    // (אם יש error מהשרת, המשתמש התחיל לערוך אז היא כבר תימחק ע"י input)
+    msgBox.style.display = 'none';
+    msgBox.textContent = '';
 
-    const busLastEl  = form.querySelector('input[name="bus_last_row"]');
+    const busLastEl  = form.querySelector('input[name="bus_last_row"]');   // קיים רק ב-LARGE
     const ecoFirstEl = form.querySelector('input[name="eco_first_row"]');
     const ecoLastEl  = form.querySelector('input[name="eco_last_row"]');
 
-    const ecoFirst = parseInt(ecoFirstEl?.value, 10);
-    const ecoLast  = parseInt(ecoLastEl?.value, 10);
+    const ecoFirst = parseInt(ecoFirstEl.value, 10);
+    const ecoLast  = parseInt(ecoLastEl.value, 10);
 
-    // Rule 1: economy range must be valid
+    // Rule 1: Economy last row must be >= first row
     if (!Number.isNaN(ecoFirst) && !Number.isNaN(ecoLast) && ecoLast < ecoFirst) {
       e.preventDefault();
       showError("Not logical: Economy last row must be >= first row.");
-      ecoLastEl?.focus();
+      ecoLastEl.focus();
       return;
     }
 
-    // Rule 2: no gap between business and economy (only if business exists)
-    if (busLastEl && ecoFirstEl) {
+    // Rule 2: No gap between Business and Economy (only if Business exists)
+    if (busLastEl) {
       const busLast = parseInt(busLastEl.value, 10);
       if (!Number.isNaN(busLast) && !Number.isNaN(ecoFirst) && ecoFirst !== busLast + 1) {
         e.preventDefault();
         showError(`Not logical: Economy must start at row ${busLast + 1} because Business ends at row ${busLast}.`);
         ecoFirstEl.focus();
-        return;
       }
     }
   });
 });
 </script>
-
-
 
 </body>
 </html>
