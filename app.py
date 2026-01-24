@@ -283,6 +283,7 @@ def admin_graph():
     import matplotlib.pyplot as plt
     import pandas as pd
     import mysql.connector as mdb
+    import numpy as np
 
     # Database connection (reuse existing)
     conn = get_db_connection()
