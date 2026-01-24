@@ -1493,7 +1493,7 @@ def flight_view(flight_number):
         flights['Departure_date'],
         dep_time
     )
-
+    session['class'] = class_type
     arr_dt = dep_dt + timedelta(minutes=flights['Duration'])
     flights['Arrival_time'] = arr_dt
     cursor.close()
@@ -1589,17 +1589,22 @@ from collections import defaultdict
 @application.route('/checkout/<int:flight_number>/passengers/seat_selection', methods=['GET', 'POST'])
 def seat_selection(flight_number):
     count = int(request.args.get('count'))
-
+    class_type = session.get('class')
     # helper function to load seats and return them with consistent format
     def load_seat_rows():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT Row_num, Col_num, Availability
-            FROM Seats_in_flight
-            WHERE Flight_number = %s
+            SELECT sif.Row_num, sif.Col_num, sif.Availability
+            FROM Seats_in_flight AS sif
+            JOIN Seat AS s 
+                ON sif.Plane_id = s.Plane_id
+                AND sif.Row_num = s.Row_num 
+                AND sif.Col_num = s.Col_num
+            WHERE sif.Flight_number = %s 
+                AND s.Class_type = %s     
             ORDER BY Row_num, Col_num
-        """, (flight_number,))
+        """, (flight_number,class_type))
         seats = cursor.fetchall()
         cursor.close()
         conn.close()
