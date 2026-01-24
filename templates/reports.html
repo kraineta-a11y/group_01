@@ -15,7 +15,8 @@
 
 <p>
   Average taken seats per landed flight:
-<strong>{{ avg_occupancy_pct|round(2) }}%</strong>
+<strong>{{ avg_occupancy_pct|default(0)|float|round(2) }}%</strong>
+
 
 </p>
 
