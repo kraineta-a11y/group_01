@@ -15,16 +15,16 @@
     </a>
   </div>
 
-  <main class="error-page">
+  <main class="error-wrap">
     <h1 class="error-title">Oops! Something went wrong</h1>
 
-    <div class="error-box">
-      <p class="error-msg">
+    <section class="error-card">
+      <div class="error-banner">
         {{ error_message or "An unexpected error occurred. Please try again later." }}
-      </p>
+      </div>
 
       <a class="back-home" href="{{ url_for('landing_page') }}">Go back to home</a>
-    </div>
+    </section>
   </main>
 
 </body>
