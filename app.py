@@ -456,11 +456,12 @@ def ensure_all_seats_exist():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT Plane_id FROM Plane")
-    planes = cursor.fetchall()
+    cursor.execute("SELECT Flight_number, Plane_id FROM Flight")
+    flights = cursor.fetchall()
 
-    for plane in planes:
-        plane_id = plane['Plane_id']
+    for flight in flights:
+        flight_number = flight['Flight_number']
+        plane_id = flight['Plane_id']
 
         cursor.execute("""
             SELECT Class_type, first_row, last_row, first_col, last_col
@@ -473,18 +474,19 @@ def ensure_all_seats_exist():
         for c in classes:
             for r in range(c['first_row'], c['last_row'] + 1):
                 for c_ord in range(ord(c['first_col']), ord(c['last_col']) + 1):
-                    seats_data.append((plane_id, r, chr(c_ord), c['Class_type']))
+                    seats_data.append((flight_number, plane_id, r, chr(c_ord), 1))
 
         if seats_data:
             cursor.executemany("""
-                INSERT IGNORE INTO Seat (Plane_id, Row_num, Col_num, Class_type)
-                VALUES (%s, %s, %s, %s)
+                INSERT IGNORE INTO Seats_in_flight
+                (Flight_number, Plane_id, Row_num, Col_num, Availability)
+                VALUES (%s, %s, %s, %s, %s)
             """, seats_data)
 
     conn.commit()
     cursor.close()
     conn.close()
-
+    return "hey"
 def admin_fix_existing_seats():
     if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
