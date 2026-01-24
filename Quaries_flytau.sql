@@ -1,6 +1,5 @@
 
 -- Quary 1 --
-USE flytau2;
 
 SELECT AVG(occ_pct) AS avg_occupancy_pct
 FROM (
