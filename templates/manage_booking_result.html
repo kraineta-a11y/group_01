@@ -13,6 +13,22 @@
 </div>
 <h1>Manage Your Booking</h1>
 
+{% if role == 'client' %}
+<form method="GET" action="{{ url_for('manage_booking_result') }}">
+    <input type="hidden" name="method" value="registered">
+    <input type="hidden" name="email" value="{{ request.args.get('email') }}">
+    <label for="status">Filter by Status:</label>
+    <select name="status" id="status">
+        <option value="">All</option>
+        <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Active</option>
+        <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>Completed</option>
+        <option value="CUSTOMER_CANCELLED" {% if status_filter == 'CUSTOMER_CANCELLED' %}selected{% endif %}>Customer Cancelled</option>
+        <option value="SYSTEM_CANCELLED" {% if status_filter == 'SYSTEM_CANCELLED' %}selected{% endif %}>System Cancelled</option>
+    </select>
+    <button type="submit">Filter</button>
+</form>
+{% endif %}
+
 {% for b in bookings %}
   <h3>Booking #{{ b.Booking_number }} ({{ b.Booking_status }})</h3>
   <p>Flight: {{ b.Flight_number }}</p>
