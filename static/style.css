@@ -1575,6 +1575,17 @@ h1{ text-align: center; }
   left: 16px;
   z-index: 10;
 }
+/* ALWAYS hide elements that are hidden */
+[hidden] { display: none !important; }
+
+/* If an error box is empty – don't show it at all */
+.form-error:empty {
+  display: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+}
+
 
 
 
