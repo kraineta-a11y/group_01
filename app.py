@@ -323,20 +323,21 @@ def admin_reports():
     # Example report: Flight counts by status
     cursor.execute("""
         SELECT AVG(t.occupancy_pct) AS avg_occupancy_pct
-FROM (
-    SELECT
-        f.Flight_number,
-        100.0 * SUM(CASE WHEN s.Availability = 0 THEN 1 ELSE 0 END)
-              / NULLIF(COUNT(s.Plane_id), 0) AS occupancy_pct
-    FROM Flight f
-    LEFT JOIN Seats_in_flight s
-      ON f.Flight_number = s.Flight_number
-     AND f.Plane_id     = s.Plane_id
-    WHERE f.Flight_status = 'LANDED'
-    GROUP BY f.Flight_number
-) AS t;
+        FROM (
+            SELECT
+                f.Flight_number,
+                100.0 * SUM(CASE WHEN s.Availability = 0 THEN 1 ELSE 0 END)
+                    / NULLIF(COUNT(s.Plane_id), 0) AS occupancy_pct
+            FROM Flight f
+            LEFT JOIN Seats_in_flight s
+            ON f.Flight_number = s.Flight_number
+            AND f.Plane_id     = s.Plane_id
+            WHERE f.Flight_status = 'LANDED'
+            GROUP BY f.Flight_number
+        ) AS t;
     """)
-    avg_taken_seats = cursor.fetchall()
+    results = cursor.fetchall()
+    avg_taken_seats = float(results[0]['avg_occupancy_pct']) if results else 0
 
     cursor.execute("""
 SELECT
@@ -429,6 +430,7 @@ GROUP BY s.Employee_id;
     staff_flight_hours = cursor.fetchall()
     cursor.close()
     conn.close()
+
 
     return render_template(
         'reports.html',
