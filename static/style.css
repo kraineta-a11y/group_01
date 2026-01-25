@@ -1637,6 +1637,19 @@ body {
   background: rgba(255, 90, 90, 0.08);
   overflow-wrap: anywhere;
 }
+.edit-flight-form{
+  width: min(900px, 88vw);
+  margin: 0 auto;
+}
+
+.edit-flight-form .error-box{
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  margin: 12px 0;
+  position: static !important; /* אם יש לך absolute somewhere */
+}
+
 
 
 
