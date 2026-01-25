@@ -61,6 +61,7 @@ body{
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
   background: transparent; /* חשוב: כדי שה-html יצבע הכל */
+  cursor:url('/static/plane.png'), auto;
 }
 
 /* =========================================================
