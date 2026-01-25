@@ -1684,6 +1684,45 @@ form .error-box {
   max-width: 100% !important;
   box-sizing: border-box;
 }
+/* 1) הקונטיינר שמגביל רוחב */
+.page-card{
+  width: min(720px, 92vw);
+  margin: 110px auto 40px;
+  padding: 28px 26px;
+  border-radius: 28px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+  box-sizing: border-box;
+  overflow: hidden; /* אם משהו עדיין מנסה לצאת – נחתך */
+}
+
+/* 2) לגרום לטפסים בתוך הכרטיס להיות ברוחב מלא */
+.page-card form{
+  width: 100%;
+  max-width: 100%;
+}
+
+/* 3) ליישר את כל האלמנטים בטופס לאותו רוחב */
+.page-card form input,
+.page-card form select,
+.page-card form button,
+.page-card .error-box{
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* 4) לדרוס מצבים שגורמים ל"בריחה" */
+.page-card .error-box{
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+}
+
 
 
 
