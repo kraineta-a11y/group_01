@@ -1713,8 +1713,16 @@ def passenger_details(flight_number):
                 "type": request.form[f"type_{i}"],
                 "Email": request.form.get(f"email", None),
                 "birthdate": request.form.get(f"birthdate", None),
-                "phone_number": request.form.get(f"phone_number", None)
+                "phone_numbers": []  # Collect all phone numbers for first passenger
             })
+
+        # Collect all phone numbers for the first passenger
+        phone_counter = 1
+        while f"phone_number_{phone_counter}" in request.form:
+            phone = request.form.get(f"phone_number_{phone_counter}", "").strip()
+            if phone:  # Only add non-empty phone numbers
+                passengers[0]["phone_numbers"].append(phone)
+            phone_counter += 1
 
         session['passengers'] = passengers
         
@@ -1909,7 +1917,7 @@ def confirm_booking(flight_number):
         email = session.get('client_email')
     else:
         email = passengers[0]['Email']  # Use first passenger's email for guest bookings
-        phone_number = passengers[0]['phone_number']
+        phone_numbers = passengers[0].get('phone_numbers', [])
         # Enter into Client table if not exists
         cursor.execute("SELECT 1 FROM Client WHERE Email = %s", (email,))
         if not cursor.fetchone():
@@ -1919,10 +1927,26 @@ def confirm_booking(flight_number):
                 "INSERT INTO Client (Email, English_first_name, English_last_name) VALUES (%s, %s, %s)",
                 (email, first_name, last_name)
             )
-            cursor.execute(
-                "INSERT INTO Phone_numbers (Email, Phone_number) VALUES (%s, %s)",
-                (email,phone_number)
-            )
+        
+        # Save all phone numbers for the guest
+        for phone_number in phone_numbers:
+            cursor.execute("SELECT 1 FROM Phone_numbers WHERE Email = %s AND Phone_number = %s", (email, phone_number))
+            if not cursor.fetchone():  # Only insert if this phone number doesn't already exist
+                cursor.execute(
+                    "INSERT INTO Phone_numbers (Email, Phone_number) VALUES (%s, %s)",
+                    (email, phone_number)
+                )
+            else:
+                # For registered clients, also save any new phone numbers
+                phone_numbers = passengers[0].get('phone_numbers', [])
+                for phone_number in phone_numbers:
+                    cursor.execute("SELECT 1 FROM Phone_numbers WHERE Email = %s AND Phone_number = %s", (email, phone_number))
+                    if not cursor.fetchone():  # Only insert if this phone number doesn't already exist
+                        cursor.execute(
+                            "INSERT INTO Phone_numbers (Email, Phone_number) VALUES (%s, %s)",
+                            (email, phone_number)
+                        )
+    
     # generate booking number
     cursor.execute("SELECT MAX(Booking_number) FROM Booking")
     max_booking = cursor.fetchone()[0]

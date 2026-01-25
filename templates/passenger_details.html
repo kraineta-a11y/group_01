@@ -3,7 +3,40 @@
 <head>
     <title>FLYTAU Check Out</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
+    <style>
+        .phone-numbers-section {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .phone-input-group {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        .phone-input-group input {
+            flex: 1;
+        }
+        .remove-phone-btn {
+            padding: 5px 10px;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .add-phone-btn {
+            padding: 5px 10px;
+            background-color: #51cf66;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <div class="corner-logo">
   <a href="{{ url_for('landing_page') }}">
@@ -23,8 +56,17 @@
     </select>
     <input name="email" placeholder="Email" value="{{ user.Email }}" required>
     <label class="field-label" for="birthdate_{{ i }}">Birth Date</label>
-  <input id="birthdate_{{ i }}" name="birthdate" type="date" required aria-label="Birth Date" value="{{ user.Birth_date }}">
-    <input name="phone_number" placeholder="Phone Number" value="{{ user.Phone_number }}" required>
+    <input id="birthdate_{{ i }}" name="birthdate" type="date" required aria-label="Birth Date" value="{{ user.Birth_date }}">
+    
+    <div class="phone-numbers-section">
+      <label>Phone Number(s):</label>
+      <div id="phone-container">
+        <div class="phone-input-group">
+          <input name="phone_number_1" type="tel" placeholder="Phone Number" value="{{ user.Phone_number }}" required>
+        </div>
+      </div>
+      <button type="button" class="add-phone-btn" onclick="addPhoneField()">+ Add Another Phone</button>
+    </div>
   {% else %}
     <h3>Passenger {{ i }}</h3>
     <input name="name_{{ i }}" placeholder="Full Name" required>
@@ -34,16 +76,43 @@
       <option value="CHILD">Child</option>
       {% if i == 1 %}
         <input name="email" placeholder="Email" required>
-       <label class="field-label" for="birthdate_{{ i }}">Birth Date</label>
-<input id="birthdate_{{ i }}" name="birthdate" type="date" required aria-label="Birth Date">
-    <input name="phone_number" placeholder="Phone Number" required>
-
+        <label class="field-label" for="birthdate_{{ i }}">Birth Date</label>
+        <input id="birthdate_{{ i }}" name="birthdate" type="date" required aria-label="Birth Date">
+        
+        <div class="phone-numbers-section">
+          <label>Phone Number(s):</label>
+          <div id="phone-container">
+            <div class="phone-input-group">
+              <input name="phone_number_1" type="tel" placeholder="Phone Number" required>
+            </div>
+          </div>
+          <button type="button" class="add-phone-btn" onclick="addPhoneField()">+ Add Another Phone</button>
+        </div>
       {% endif %}
     </select>
   {% endif %}
 {% endfor %}
 
   <button type="submit">Next → Seat Selection</button>
-</form>
+
+<script>
+  let phoneCount = 1;
+  
+  function addPhoneField() {
+    phoneCount++;
+    const container = document.getElementById('phone-container');
+    const div = document.createElement('div');
+    div.className = 'phone-input-group';
+    div.innerHTML = `
+      <input name="phone_number_${phoneCount}" type="tel" placeholder="Phone Number">
+      <button type="button" class="remove-phone-btn" onclick="removePhoneField(this)">Remove</button>
+    `;
+    container.appendChild(div);
+  }
+  
+  function removePhoneField(button) {
+    button.parentElement.remove();
+  }
+</script>
 </body>
 </html>
