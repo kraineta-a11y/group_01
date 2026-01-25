@@ -1,5 +1,6 @@
 
 -- Quary 1 --
+USE flytau2;
 
 SELECT AVG(occ_pct) AS avg_occupancy_pct
 FROM (
@@ -104,10 +105,12 @@ GROUP BY s.Employee_id;
 
 -- Quary 4 --
 SELECT
-  DATE_FORMAT(b.Booking_date, '%Y-%m') AS ym,
-  SUM(b.Booking_status = 'CUSTOMER_CANCELLED') / 
-  COUNT(*) AS cancellation_rate
-FROM Booking b
+  DATE_FORMAT(Booking_date, '%Y-%m') AS ym,
+  ROUND(
+    100.0 * SUM(Booking_status = 'CUSTOMER_CANCELLED') / COUNT(*),
+    2
+  ) AS cancellation_rate_pct
+FROM Booking
 GROUP BY ym
 ORDER BY ym;
 
