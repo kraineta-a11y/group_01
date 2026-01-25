@@ -12,6 +12,7 @@
     <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
   </a>
 </div>
+    <div class="page-card">
 
 <h1>Edit Flight {{ flight.Flight_number }}</h1>
 
@@ -109,5 +110,7 @@
 <form method="GET" action="{{ url_for('admin_dashboard') }}">
   <button type="submit">Back to Admin</button>  
 </form>
+        </div>
+
 </body>
 </html>
