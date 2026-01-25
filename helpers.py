@@ -65,18 +65,33 @@ def generate_seats_for_plane(plane_id):
     conn.close()
 
 def handle_flight_update(flight_number, request, session):
-    from database import get_db_connection
+    from database import get_db_connection, build_edit_flight_context
     from flask import redirect, url_for
     from werkzeug.exceptions import abort
+    
+    # Build context to access flags like can_edit_economy
+    ctx = build_edit_flight_context(flight_number)
+    can_edit_economy = ctx['context']['can_edit_economy']
+    can_edit_business = ctx['context']['can_edit_business']
+
     # ---- Parse form inputs ----
     route_id = request.form['route']
     status = request.form['status']
-    economy_price = float(request.form['economy_price'])
-    business_price = (
-        float(request.form['business_price'])
-        if 'business_price' in request.form and request.form['business_price']
-        else None
-    )
+    economy_price_raw = request.form.get('economy_price')
+    business_price_raw = request.form.get('business_price')
+
+    economy_price = None
+    if can_edit_economy and economy_price_raw:
+        economy_price = float(economy_price_raw)
+
+    business_price = None
+    if can_edit_business and business_price_raw:
+        business_price = float(business_price_raw)
+
+    # Check if business price is still the default (1.5x economy), allow editing once
+    if business_price_raw and economy_price_raw and (float(business_price_raw) == 1.5 * float(economy_price_raw)):
+        can_edit_business = True
+        business_price = float(business_price_raw)
 
     departure_date = datetime.strptime(
         request.form['departure_date'], "%Y-%m-%d"
@@ -133,17 +148,31 @@ def handle_flight_update(flight_number, request, session):
             status,
             flight_number
         ))
-
-        # ---- Update economy price ----
-        cursor.execute("""
-            UPDATE Flight_pricing
-            SET Price = %s
-            WHERE Flight_number = %s
-              AND Class_type = 'ECONOMY'
-        """, (economy_price, flight_number))
+        
+        if can_edit_economy:
+            # ---- Update economy price ----
+            cursor.execute("""
+                UPDATE Flight_pricing
+                SET Price = %s
+                WHERE Flight_number = %s
+                AND Class_type = 'ECONOMY'
+            """, (economy_price, flight_number))
 
         # ---- Update business price if applicable ----
-        if business_price is not None:
+        if business_price is not None and can_edit_business:
+            # making sure business price exists in sql
+            cursor.execute("SELECT Plane_id FROM Flight WHERE Flight_number= %s", (flight_number,))
+            row = cursor.fetchone()
+            plane_id = row[0]
+
+            cursor.execute("""
+                SELECT * FROM Flight_pricing WHERE Flight_number = %s AND Class_type = 'BUSINESS'
+            """, (flight_number,))
+            check = cursor.fetchall()
+            if not check:
+                cursor.execute("""
+                    INSERT INTO Flight_pricing (Flight_number, Plane_id, Class_type, Employee_id, Price) VALUES (%s,%s,'BUSINESS',1,0)
+                """, (flight_number,plane_id))
             cursor.execute("""
                 UPDATE Flight_pricing
                 SET Price = %s
