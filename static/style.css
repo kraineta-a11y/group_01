@@ -1664,6 +1664,27 @@ form .error-box {
   align-self: flex-start;
   overflow-wrap: anywhere;
 }
+.page-card{
+  width: min(760px, 90vw);
+  margin: 110px auto 40px;
+  padding: 28px 26px;
+  border-radius: 28px;
+
+  /* הרקע של ה"מלבן" */
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+
+  /* זה מה שמונע יציאה מהגבולות */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.page-card .error-box{
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
 
 
 
