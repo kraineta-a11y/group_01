@@ -708,9 +708,9 @@ def add_classes():
 
             # INSERT Plane
             cursor.execute("""
-                INSERT INTO Plane (Plane_id, Manufacturer, Size, Purchase_date, Number_of_classes, Number_of_seats)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (plane_id, pending['manufacturer'], size, datetime.now().date(), class_num, total_seats))
+                INSERT INTO Plane (Plane_id, Manufacturer, Size, Purchase_date)
+                VALUES (%s, %s, %s, %s)
+            """, (plane_id, pending['manufacturer'], size, datetime.now().date()))
 
             # INSERT Economy
             cursor.execute("""
