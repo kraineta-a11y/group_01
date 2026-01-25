@@ -1315,9 +1315,9 @@ def admin_create_flight():
         flight_number = (res['max_num'] or 0) + 1
 
         cursor.execute("""
-            INSERT INTO Flight (Flight_number, Plane_id, Route_id, Departure_date, Departure_time, Flight_status)
-            VALUES (%s, %s, %s, %s, %s, 'ACTIVE')
-        """, (flight_number, plane_id, route_id, dep_date_obj, dep_time_obj))
+            INSERT INTO Flight (Flight_number, Plane_id, Route_id, Departure_date, Departure_time, Flight_status, Employee_id)
+            VALUES (%s, %s, %s, %s, %s, 'ACTIVE', %s)
+        """, (flight_number, plane_id, route_id, dep_date_obj, dep_time_obj, manager_id))
 
         # Insert Pricing (Economy)
         cursor.execute("""
