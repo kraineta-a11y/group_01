@@ -54,12 +54,14 @@
     {% else %}
         <div class="error-box">Economy price cannot be changed.</div>
     {% endif %}
-
-    {% if can_edit_business %}
-        <label for="business_price">Business Price:</label>
-        <input type="number" id="business_price" name="business_price" step="0.01" value="{{ flight.business_price or '' }}">
-    {% else %}
-        <div class="error-box">Business price cannot be changed.</div>
+    
+    {% if flight.Size == 'LARGE' %}
+        {% if can_edit_business %}
+            <label for="business_price">Business Price:</label>
+            <input type="number" id="business_price" name="business_price" step="0.01" value="{{ flight.business_price or '' }}">
+        {% else %}
+            <div class="error-box">Business price cannot be changed.</div>
+        {% endif %}
     {% endif %}
     <label>Status</label>
     <select name="status" required>
