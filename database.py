@@ -279,7 +279,13 @@ def build_edit_flight_context(flight_number, error=None):
         elif p['Class_type'] == 'BUSINESS':
             flight['business_price'] = p['Price']    
     context['can_edit_economy'] = flight['economy_price'] is None
-    context['can_edit_business'] = flight['business_price'] is None  # Allow editing business once
+    # Allow editing business if it's not set OR if it's still at the default 1.5x economy price
+    if flight['business_price'] is None:
+        context['can_edit_business'] = True
+    elif flight['economy_price'] is not None and flight['business_price'] == flight['economy_price'] * 1.5:
+        context['can_edit_business'] = True
+    else:
+        context['can_edit_business'] = False
     cursor.close()
     conn.close()
 
