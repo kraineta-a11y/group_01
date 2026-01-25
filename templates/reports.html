@@ -98,6 +98,26 @@
   </tr>
   {% endfor %}
 </table>
+    <h2>Managers Average Pricing (by class)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Employee ID</th>
+      <th>Class</th>
+      <th>Avg Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in manager_pricing_report %}
+      <tr>
+        <td>{{ row.Employee_id }}</td>
+        <td>{{ row.Class_type }}</td>
+        <td>{{ row.avg_price }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 
 
 <form method="GET" action="{{ url_for('admin_dashboard') }}">
