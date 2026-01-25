@@ -462,7 +462,6 @@ SELECT
   ) AS cancellation_rate_pct
 FROM Booking
 GROUP BY ym
-HAVING SUM(Booking_status = 'CUSTOMER_CANCELLED') > 0
 ORDER BY ym;
 
 
