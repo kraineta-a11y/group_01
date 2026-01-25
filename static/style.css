@@ -1722,6 +1722,38 @@ form .error-box {
   right: auto !important;
   transform: none !important;
 }
+/* Center the titles */
+.page-card h1,
+.page-card h2{
+  text-align: center;
+}
+
+/* FIX: don't stretch checkboxes/radios */
+.page-card input[type="checkbox"],
+.page-card input[type="radio"]{
+  width: auto !important;
+  max-width: none !important;
+  display: inline-block !important;
+}
+
+/* Crew list: show names next to the checkbox */
+.crew-form .crew-item{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* not centered */
+  gap: 12px;
+}
+
+.crew-form .crew-item input[type="checkbox"]{
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.crew-form .crew-name{
+  flex: 1;
+  min-width: 0;
+}
+
 
 
 
