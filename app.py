@@ -40,6 +40,10 @@ def handle_flight_update(flight_number):
     ctx = build_edit_flight_context(flight_number)
     can_edit_economy = ctx['context']['can_edit_economy']
     can_edit_business = ctx['context']['can_edit_business']
+
+    if (float(request.form['business_price']) == 1.5 * float(request.form['economy_price'])):
+        #business is still the default and can be edited
+        can_edit_business = True
     # ---- Parse form inputs ----
     route_id = request.form['route']
     status = request.form['status']
@@ -1455,7 +1459,7 @@ def admin_create_flight():
         plane_data = cursor.fetchone()
         plane_size = plane_data['Size']
 
-        if plane_size == 'SMALL' and dur > 180:
+        if plane_size == 'SMALL' and dur > 360:
             cursor.close(); conn.close()
             return render_template('create_flight.html', origins=origins, destinations=destinations, planes=planes, error="Plane too small for long-haul.")
 
@@ -1581,7 +1585,6 @@ def admin_create_flight():
 def assign_crew():
     error = None
 
-            
     conn = get_db_connection()
     cursor = conn.cursor()
     if get_user_role(session) != 'manager':
