@@ -1585,6 +1585,46 @@ h1{ text-align: center; }
   margin: 0 !important;
   border: 0 !important;
 }
+.form-container{
+  width: min(720px, 92vw);
+  margin: 0 auto;
+}
+
+.form-alert{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0 18px;
+  position: static; /* חשוב אם היה absolute/fixed */
+}
+
+/* הכרטיס עצמו – שלא יאפשר לילדים לברוח החוצה */
+.card, .form-container {
+  overflow: hidden;
+}
+
+/* המלבן של ההודעה / מידע – שיהיה בגבולות הכרטיס */
+.alert, .info, .form-alert {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-left: 0;
+  margin-right: 0;
+  position: static !important;  /* אם היה absolute/fixed */
+}
+/* Prevent inputs from overflowing containers */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* The main card */
+
+
 
 
 
