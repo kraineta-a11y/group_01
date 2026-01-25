@@ -672,11 +672,15 @@ GROUP BY s.Employee_id;
     # Monthly cancellation report
     cursor.execute("""
 SELECT
-  DATE_FORMAT(b.Booking_date, '%Y-%m') AS ym,
-  SUM(b.Booking_status = 'CUSTOMER CANCELLED') / COUNT(*) AS customer_cancellation_rate
-FROM Booking b
+  DATE_FORMAT(Booking_date, '%Y-%m') AS ym,
+  ROUND(
+    100.0 * SUM(Booking_status = 'CUSTOMER_CANCELLED') / COUNT(*),
+    2
+  ) AS cancellation_rate_pct
+FROM Booking
 GROUP BY ym
 ORDER BY ym;
+
     """)
     cancellation_report = cursor.fetchall()
 
