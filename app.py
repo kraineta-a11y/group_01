@@ -577,6 +577,18 @@ ORDER BY ym;
     """)
 
     utilization_report = cursor.fetchall()
+        # Managers average pricing by class
+    cursor.execute("""
+        SELECT
+            fp.Employee_id,
+            fp.Class_type,
+            ROUND(AVG(fp.Price), 2) AS avg_price
+        FROM Flight_pricing fp
+        GROUP BY fp.Employee_id, fp.Class_type
+        ORDER BY fp.Employee_id, fp.Class_type;
+    """)
+    manager_pricing_report = cursor.fetchall()
+
 
     cursor.close()
     conn.close()
@@ -588,8 +600,10 @@ ORDER BY ym;
         money_intake=money_intake,
         staff_flight_hours=staff_flight_hours,
         cancellation_report=cancellation_report,
-        utilization_report=utilization_report
+        utilization_report=utilization_report,
+        manager_pricing_report=manager_pricing_report
     )
+
 
     # Admin add planes
 
