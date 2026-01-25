@@ -70,8 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chosen = selectedValues();
 
     radios.forEach(r => {
-      // אם המושב נבחר ע"י מישהו אחר -> לנעול אותו בכל הקבוצות האחרות
-      // אבל להשאיר את המושב שנבחר בקבוצה הנוכחית פעיל (כדי שאפשר יהיה לבטל/להחליף)
+  
       if (chosen.has(r.value) && !r.checked) {
         r.disabled = true;
         r.closest('label')?.classList.add('seat-disabled');
@@ -82,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // כל שינוי בחירה מרענן נעילות
   radios.forEach(r => r.addEventListener('change', refreshDisabled));
 
   refreshDisabled();
