@@ -6,19 +6,6 @@
 
 </head>
 <body class="landing">
-<style>
-  .plane {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 30px;
-    height: 30px;
-    pointer-events: none;
-    transition: transform 0.05s ease;
-    z-index: 9999;
-  }
-</style>
-<img src="{{ url_for('static', filename='plane.png') }}" class="plane" id="plane" alt="plane" />
 <div class="corner-logo">
   <a href="{{ url_for('landing_page') }}">
     <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
