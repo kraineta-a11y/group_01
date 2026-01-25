@@ -1753,6 +1753,22 @@ form .error-box {
   flex: 1;
   min-width: 0;
 }
+/* FORCE center for the page title + section titles */
+.page-card > h1,
+.page-card > h2 {
+  width: 100% !important;
+  text-align: center !important;
+
+  /* cancel any weird offsets */
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  position: static !important;
+  align-self: center !important;
+}
+
 
 
 
