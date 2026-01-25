@@ -1,5 +1,6 @@
 import mysql.connector as mdb
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 def get_db_connection():
     return mdb.connect(
@@ -282,7 +283,7 @@ def build_edit_flight_context(flight_number, error=None):
     # Allow editing business if it's not set OR if it's still at the default 1.5x economy price
     if flight['business_price'] is None:
         context['can_edit_business'] = True
-    elif flight['economy_price'] is not None and flight['business_price'] == flight['economy_price'] * 1.5:
+    elif flight['economy_price'] is not None and flight['business_price'] == flight['economy_price'] * Decimal('1.5'):
         context['can_edit_business'] = True
     else:
         context['can_edit_business'] = False
