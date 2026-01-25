@@ -41,23 +41,24 @@ def handle_flight_update(flight_number):
     can_edit_economy = ctx['context']['can_edit_economy']
     can_edit_business = ctx['context']['can_edit_business']
 
-    if (float(request.form['business_price']) == 1.5 * float(request.form['economy_price'])):
-        #business is still the default and can be edited
-        can_edit_business = True
     # ---- Parse form inputs ----
     route_id = request.form['route']
     status = request.form['status']
-    economy_price = None
-    if can_edit_economy and 'economy_price' in request.form:
-        economy_price = float(request.form['economy_price'])
-    business_price = None
-    if can_edit_business:
-        business_price = (
-            float(request.form['business_price'])
-            if 'business_price' in request.form and request.form['business_price']
-            else None
-        )
+    economy_price_raw = request.form.get('economy_price')
+    business_price_raw = request.form.get('business_price')
 
+    economy_price = None
+    if can_edit_economy and economy_price_raw:
+        economy_price = float(economy_price_raw)
+
+    business_price = None
+    if can_edit_business and business_price_raw:
+        business_price = float(business_price_raw)
+
+    # Check if business price is still the default (1.5x economy), allow editing once
+    if business_price_raw and economy_price_raw and (float(business_price_raw) == 1.5 * float(economy_price_raw)):
+        can_edit_business = True
+        business_price = float(business_price_raw)
 
     departure_date = datetime.strptime(
         request.form['departure_date'], "%Y-%m-%d"
