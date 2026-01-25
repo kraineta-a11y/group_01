@@ -457,12 +457,11 @@ GROUP BY s.Employee_id;
 SELECT
   DATE_FORMAT(Booking_date, '%Y-%m') AS ym,
   ROUND(
-    100.0 * SUM(Booking_status = 'CUSTOMER_CANCELLED') / COUNT(*),
+    100.0 * SUM(Booking_status = 'CUSTOMER CANCELLED') / COUNT(*),
     2
   ) AS cancellation_rate_pct
 FROM Booking
 GROUP BY ym
-HAVING SUM(Booking_status = 'CUSTOMER_CANCELLED') > 0
 ORDER BY ym;
 
 
