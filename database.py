@@ -301,5 +301,7 @@ def build_edit_flight_context(flight_number, error=None):
         'assigned_pilots': assigned_pilots,
         'assigned_stewards': assigned_stewards,
         'error': error,
-        'context': context
+        'context': context,
+        'can_edit_economy': context['can_edit_economy'],
+        'can_edit_business': context['can_edit_business']
     }
