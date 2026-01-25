@@ -1649,6 +1649,22 @@ body {
   margin: 12px 0;
   position: static !important; /* אם יש לך absolute somewhere */
 }
+/* Make error boxes match the form field width */
+form input,
+form select,
+form .error-box {
+  width: clamp(320px, 45vw, 560px);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Prevent flex stretching if the form uses flex */
+form .error-box {
+  flex: none;
+  align-self: flex-start;
+  overflow-wrap: anywhere;
+}
+
 
 
 
