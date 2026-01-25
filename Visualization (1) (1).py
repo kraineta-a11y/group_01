@@ -27,7 +27,6 @@ JOIN Plane p
 JOIN Class c
   ON c.Plane_id = f.Plane_id
 
--- מחיר למחלקה בטיסה (מכווץ כדי למנוע הכפלות אם יש כמה רשומות תמחור)
 LEFT JOIN (
     SELECT Flight_number, Plane_id, Class_type, MAX(Price) AS Price
     FROM Flight_pricing
@@ -37,12 +36,11 @@ LEFT JOIN (
  AND fp.Plane_id     = f.Plane_id
  AND fp.Class_type   = c.Class_type
 
--- הזמנות: LEFT JOIN כדי לא להפיל טיסות בלי הזמנות
+
 LEFT JOIN Booking b
   ON b.Flight_number = f.Flight_number
  AND b.Booking_status IN ('ACTIVE', 'COMPLETED', 'CUSTOMER_CANCELLED')
 
--- מושבים שנמכרו: LEFT JOIN כדי לא להפיל טיסות/מחלקות בלי מכירות
 LEFT JOIN Seats_in_order sio
   ON sio.Booking_number = b.Booking_number
  AND sio.Plane_id       = f.Plane_id
@@ -171,5 +169,6 @@ plt.xticks(idx, labels, rotation=0)
 plt.legend()
 plt.tight_layout()
 plt.show()
+
 
 
