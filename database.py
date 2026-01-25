@@ -252,7 +252,6 @@ def build_edit_flight_context(flight_number, error=None):
     flight['business_price'] = None
     context = {}
     prices_exist = cursor.fetchone() is not None
-    context['can_edit_prices'] = not prices_exist  # Allow editing only if no prices set
 
     cursor.execute("SELECT Route_id, Origin_airport, Destination_airport FROM Flying_route")
     route = cursor.fetchall()
@@ -280,13 +279,16 @@ def build_edit_flight_context(flight_number, error=None):
         elif p['Class_type'] == 'BUSINESS':
             flight['business_price'] = p['Price']    
     context['can_edit_economy'] = flight['economy_price'] is None
-    # Allow editing business if it's not set OR if it's still at the default 1.5x economy price
-    if flight['business_price'] is None:
-        context['can_edit_business'] = True
-    elif flight['economy_price'] is not None and flight['business_price'] == flight['economy_price'] * Decimal('1.5'):
-        context['can_edit_business'] = True
-    else:
-        context['can_edit_business'] = False
+    # Business price can be edited if:
+    # 1. It doesn't exist yet, OR
+    # 2. It still equals the default 1.5x economy price
+    context['can_edit_business'] = True  # Default to allowing edits
+    if flight['business_price'] is not None and flight['economy_price'] is not None:
+        # Business exists, check if it's still at default multiplier
+        expected_business = flight['economy_price'] * Decimal('1.5')
+        if flight['business_price'] != expected_business:
+            # Business price has been changed from default - lock it
+            context['can_edit_business'] = False
     cursor.close()
     conn.close()
 
