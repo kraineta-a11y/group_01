@@ -61,7 +61,6 @@ GROUP BY p.Size, p.Manufacturer, c.Class_type;
 -- Quary 3 --
 SELECT
     p.Employee_id,
-    'PILOT' AS role,
     COALESCE(SUM(CASE
         WHEN fr.Duration <= 360 THEN fr.Duration / 60.0
         ELSE 0
@@ -84,7 +83,6 @@ UNION ALL
 
 SELECT
     s.Employee_id,
-    'STEWARD' AS role,
     COALESCE(SUM(CASE
         WHEN fr.Duration <= 360 THEN fr.Duration / 60.0
         ELSE 0
