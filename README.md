@@ -2,8 +2,8 @@
 
 # FLYTAU ✈️ – Airline Booking & Management System (Flask + MySQL)
 
-**Live website:** https://netarosh.pythonanywhere.com/ :contentReference[oaicite:0]{index=0}  
-**Repository:** https://github.com/kraineta-a11y/group_01/tree/main :contentReference[oaicite:1]{index=1}
+**Live website:** https://netarosh.pythonanywhere.com/  
+**Repository:** https://github.com/kraineta-a11y/group_01/tree/main
 ---
 
 ## תוכן עניינים
