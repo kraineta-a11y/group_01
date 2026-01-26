@@ -49,7 +49,7 @@
 - **Backend:** Python + Flask 
 - **Database:** MySQL (schema + data ב-SQL dump)  
 - **Frontend:** HTML (Jinja Templates) + CSS   
-- **Deployment:** PythonAnywhere {index=11}
+- **Deployment:** PythonAnywhere
 
 ---
 .
