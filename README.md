@@ -5,11 +5,7 @@
 **Live website:** https://netarosh.pythonanywhere.com/  
 **Repository:** https://github.com/kraineta-a11y/group_01/tree/main
 ---
-- [Queries ו-Visualization](#queries-ו-visualization)
-- [Deployment](#deployment)
-- [Contributors](#contributors)
 
----
 
 ## מה אפשר לעשות באתר
 
