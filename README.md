@@ -4,9 +4,6 @@
 
 **Live website:** https://netarosh.pythonanywhere.com/ :contentReference[oaicite:0]{index=0}  
 **Repository:** https://github.com/kraineta-a11y/group_01/tree/main :contentReference[oaicite:1]{index=1}
-
-FLYTAU הוא פרויקט סמסטר שמדמה מערכת ניהול והזמנות של חברת תעופה: חיפוש טיסות, ביצוע הזמנה, בחירת מושבים, ניהול הזמנות, וניהול נתונים דרך מסד נתונים רלציוני ב-MySQL + אפליקציית Web ב-Flask (Python). :contentReference[oaicite:2]{index=2}
-
 ---
 
 ## תוכן עניינים
