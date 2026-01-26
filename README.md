@@ -5,14 +5,6 @@
 **Live website:** https://netarosh.pythonanywhere.com/  
 **Repository:** https://github.com/kraineta-a11y/group_01/tree/main
 ---
-
-## תוכן עניינים
-- [מה אפשר לעשות באתר](#מה-אפשר-לעשות-באתר)
-- [UI/UX חשובים](#uiux-חשובים)
-- [Business Logic עיקרי](#business-logic-עיקרי)
-- [טכנולוגיות](#טכנולוגיות)
-- [איך מריצים מקומית](#איך-מריצים-מקומית)
-- [מבנה הריפו והסבר על כל הקבצים](#מבנה-הריפו-והסבר-על-כל-הקבצים)
 - [Queries ו-Visualization](#queries-ו-visualization)
 - [Deployment](#deployment)
 - [Contributors](#contributors)
