@@ -91,8 +91,7 @@ conn = mdb.connect(
     )
 query = """
 SELECT
-    p.Employee_id,
-    'PILOT' AS role,
+	p.Employee_id,
     COALESCE(SUM(CASE
         WHEN fr.Duration <= 360 THEN fr.Duration / 60.0
         ELSE 0
@@ -114,8 +113,7 @@ GROUP BY p.Employee_id
 UNION ALL
 
 SELECT
-    s.Employee_id,
-    'STEWARD' AS role,
+	s.Employee_id,
     COALESCE(SUM(CASE
         WHEN fr.Duration <= 360 THEN fr.Duration / 60.0
         ELSE 0
@@ -169,6 +167,7 @@ plt.xticks(idx, labels, rotation=0)
 plt.legend()
 plt.tight_layout()
 plt.show()
+
 
 
 
