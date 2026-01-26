@@ -22,19 +22,17 @@
 ## מה אפשר לעשות באתר
 
 ### גלישה כ-Guest
-בדף הבית אפשר לגלוש כאורח/ת (Guest) ולחפש טיסות. בדף הבית מופיע גם Tip שמסביר שאפשר ללחוץ **Search** בלי למלא שדות כדי לראות את כל הטיסות הזמינות. :contentReference[oaicite:3]{index=3}
-
+בדף הבית אפשר לגלוש כאורח/ת (Guest) ולחפש טיסות. בדף הבית מופיע גם Tip שמסביר שאפשר ללחוץ **Search** בלי למלא שדות כדי לראות את כל הטיסות הזמינות. 
 ### Login / Register
-קיים מסך התחברות ייעודי, עם קישור להרשמה (Register). :contentReference[oaicite:4]{index=4}
-
+קיים מסך התחברות ייעודי, עם קישור להרשמה (Register). 
 ### Manage Booking (ניהול הזמנה)
-מהדף הראשי יש גישה ל-**Manage Bookings** ומסך שבו מזינים **Booking number** ו-**Email** כדי לצפות בהזמנה קיימת. :contentReference[oaicite:5]{index=5}
+מהדף הראשי יש גישה ל-**Manage Bookings** ומסך שבו מזינים **Booking number** ו-**Email** כדי לצפות בהזמנה קיימת. 
 
 ### Seat Selection (בחירת מושבים)
 בריפו קיימת תבנית בשם `seat_selection.html` (בתיקיית `templates`) המייצגת ממשק בחירת מושב/ים לפי זמינות.  
 המערכת מעדכנת מושבים כתפוסים/פנויים בהתאם להזמנה ולחוקים שהוגדרו.
 
-> הערה: שם הקובץ מופיע לפי הריפו (תיקיית templates והעדכונים שבוצעו בה). :contentReference[oaicite:6]{index=6}
+> הערה: שם הקובץ מופיע לפי הריפו (תיקיית templates והעדכונים שבוצעו בה).
 
 ---
 
@@ -60,10 +58,10 @@
 ---
 
 ## טכנולוגיות
-- **Backend:** Python + Flask :contentReference[oaicite:8]{index=8}  
-- **Database:** MySQL (schema + data ב-SQL dump) :contentReference[oaicite:9]{index=9}  
-- **Frontend:** HTML (Jinja Templates) + CSS :contentReference[oaicite:10]{index=10}  
-- **Deployment:** PythonAnywhere :contentReference[oaicite:11]{index=11}
+- **Backend:** Python + Flask 
+- **Database:** MySQL (schema + data ב-SQL dump)  
+- **Frontend:** HTML (Jinja Templates) + CSS   
+- **Deployment:** PythonAnywhere {index=11}
 
 ---
 
@@ -73,8 +71,7 @@
 
 ### 1) יצירת DB והעלאת schema+data
 בריפו יש גיבוי מלא:
-- `db-backup-Final.sql` :contentReference[oaicite:12]{index=12}
+- `db-final.sql
 
-דוגמה (ב-MySQL CLI):
-```sql
-SOURCE db-backup-Final.sql;
+
+
