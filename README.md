@@ -64,14 +64,8 @@
 - **Deployment:** PythonAnywhere {index=11}
 
 ---
-
-## איך מריצים מקומית
-
-> אם כבר יש לכם MySQL מותקן מקומית + Python 3 – זה ה-flow המומלץ.
-
-### 1) יצירת DB והעלאת schema+data
-בריפו יש גיבוי מלא:
-- `db-final.sql
+.
+:
 
 
 
