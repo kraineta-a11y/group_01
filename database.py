@@ -72,31 +72,97 @@ def get_available_planes(flight_number):
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT f.*, fr.*
+        SELECT f.Flight_number, f.Departure_date, f.Departure_time, f.Flight_status,
+               fr.Duration, fr.Origin_airport, fr.Destination_airport
         FROM Flight f
         JOIN Flying_route fr ON f.Route_id = fr.Route_id
         WHERE f.Flight_number = %s
     """, (flight_number,))
     flight = cursor.fetchone()
+    if not flight:
+        cursor.close(); conn.close()
+        return []
 
     dep_time = (datetime.min + flight['Departure_time']).time()
     dep_dt = datetime.combine(flight['Departure_date'], dep_time)
     arr_dt = dep_dt + timedelta(minutes=flight['Duration'])
+
+    origin = flight['Origin_airport']
+    dest   = flight['Destination_airport']
     long_haul = flight['Duration'] > 360
 
     query = """
-        SELECT p.Plane_id, p.Manufacturer, p.Size
-        FROM Plane p
-        WHERE p.Plane_id NOT IN (
-            SELECT f2.Plane_id
-            FROM Flight f2
-            JOIN Flying_route fr2 ON f2.Route_id = fr2.Route_id
-            WHERE f2.Flight_status <> 'CANCELLED'
-              AND TIMESTAMP(f2.Departure_date, f2.Departure_time) < %s
-              AND TIMESTAMP(f2.Departure_date, f2.Departure_time) + INTERVAL fr2.Duration MINUTE > %s
+    SELECT p.Plane_id, p.Manufacturer, p.Size
+    FROM Plane p
+    WHERE 1=1
+
+      -- 1) אין חפיפה בזמן עם טיסות אחרות (לא מבוטלות)
+      AND NOT EXISTS (
+        SELECT 1
+        FROM Flight f2
+        JOIN Flying_route fr2 ON fr2.Route_id = f2.Route_id
+        WHERE f2.Plane_id = p.Plane_id
+          AND f2.Flight_number <> %s
+          AND f2.Flight_status <> 'CANCELLED'
+          AND TIMESTAMP(f2.Departure_date, f2.Departure_time) < %s
+          AND TIMESTAMP(f2.Departure_date, f2.Departure_time) + INTERVAL fr2.Duration MINUTE > %s
+      )
+
+      -- 2) המטוס חייב להיות ב-Origin בזמן dep_dt (לפי הטיסה האחרונה שנחתה לפני dep_dt)
+      AND (
+        NOT EXISTS (
+          SELECT 1
+          FROM Flight fprev
+          JOIN Flying_route frprev ON frprev.Route_id = fprev.Route_id
+          WHERE fprev.Plane_id = p.Plane_id
+            AND fprev.Flight_number <> %s
+            AND fprev.Flight_status <> 'CANCELLED'
+            AND TIMESTAMP(fprev.Departure_date, fprev.Departure_time) + INTERVAL frprev.Duration MINUTE <= %s
         )
+        OR (
+          SELECT frprev.Destination_airport
+          FROM Flight fprev
+          JOIN Flying_route frprev ON frprev.Route_id = fprev.Route_id
+          WHERE fprev.Plane_id = p.Plane_id
+            AND fprev.Flight_number <> %s
+            AND fprev.Flight_status <> 'CANCELLED'
+            AND TIMESTAMP(fprev.Departure_date, fprev.Departure_time) + INTERVAL frprev.Duration MINUTE <= %s
+          ORDER BY TIMESTAMP(fprev.Departure_date, fprev.Departure_time) + INTERVAL frprev.Duration MINUTE DESC
+          LIMIT 1
+        ) = %s
+      )
+
+      -- 3) אם יש טיסה עתידית אחרי arr_dt, היא חייבת לצאת מ-dest (כדי שהשרשרת הגיונית)
+      AND (
+        NOT EXISTS (
+          SELECT 1
+          FROM Flight fnext
+          WHERE fnext.Plane_id = p.Plane_id
+            AND fnext.Flight_number <> %s
+            AND fnext.Flight_status <> 'CANCELLED'
+            AND TIMESTAMP(fnext.Departure_date, fnext.Departure_time) >= %s
+        )
+        OR (
+          SELECT frnext.Origin_airport
+          FROM Flight fnext
+          JOIN Flying_route frnext ON frnext.Route_id = fnext.Route_id
+          WHERE fnext.Plane_id = p.Plane_id
+            AND fnext.Flight_number <> %s
+            AND fnext.Flight_status <> 'CANCELLED'
+            AND TIMESTAMP(fnext.Departure_date, fnext.Departure_time) >= %s
+          ORDER BY TIMESTAMP(fnext.Departure_date, fnext.Departure_time) ASC
+          LIMIT 1
+        ) = %s
+      )
     """
-    params = [arr_dt, dep_dt]
+
+    params = [
+        flight_number, arr_dt, dep_dt,       # overlap
+        flight_number, dep_dt,               # prev exists
+        flight_number, dep_dt, origin,       # prev destination
+        flight_number, arr_dt,               # next exists
+        flight_number, arr_dt, dest          # next origin
+    ]
 
     if long_haul:
         query += "\nAND p.Size = 'LARGE'"
@@ -107,6 +173,7 @@ def get_available_planes(flight_number):
     cursor.close()
     conn.close()
     return results
+
 
 
 # In get_available_staff:
