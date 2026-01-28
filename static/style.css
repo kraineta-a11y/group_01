@@ -1945,6 +1945,21 @@ form .error-box{
   margin: 16px 0 0 !important;
   box-sizing: border-box !important;
 }
+/* Show card background on BOTH sides of the crew rows */
+.crew-list{
+  margin: 0 !important;                 /* cancels the negative margins */
+  padding-inline: 18px;                 /* equal left/right inset (works with RTL too) */
+}
+
+.crew-item{
+  width: 100%;
+  margin: 10px 0;
+  border-radius: var(--radius2) !important;
+  border: 1px solid var(--line) !important;
+  background: rgba(255,255,255,.05) !important;
+  box-sizing: border-box;
+}
+
 
 
 
