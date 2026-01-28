@@ -20,7 +20,7 @@
 
       <form method="post" class="crew-form">
         <input type="hidden" name="flight_number" value="{{ flight_number }}">
-
+<div class="crew-note">
 <h3>Pilots</h3>
 <div class="crew-list">
   {% for p in pilots %}
@@ -51,7 +51,7 @@
       <form method="POST" action="{{ url_for('assign_crew') }}" class="crew-actions">
         <input type="hidden" name="flight_number" value="{{ flight_number }}">
         <button type="submit" name="action" value="delete" class="btn danger">Delete Flight</button>
-      </form>
+      </form></div>
 
       {% if error %}
         <div class="error-box crew-error">
