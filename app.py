@@ -1681,10 +1681,13 @@ def passenger_count(flight_number):
             email = session.get('client_email')
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT r.Passport_number, r.Birth_date, c.English_first_name, c.English_last_name, p.Phone_number FROM Registered_client r JOIN Client c ON r.Email = c.Email JOIN Phone_numbers p ON r.Email = p.Email WHERE r.Email = %s", (email,))
+            cursor.execute("SELECT r.Passport_number, r.Birth_date, c.English_first_name, c.English_last_name, p.Phone_number FROM Registered_client r JOIN Client c ON r.Email = c.Email LEFT JOIN Phone_numbers p ON r.Email = p.Email WHERE r.Email = %s LIMIT 1", (email,))
             user = cursor.fetchone()
-            user['type'] = 'ADULT' if (datetime.now().date() - user['Birth_date']).days // 365 < 18 else 'CHILD'
-            user['Email'] = email
+            if user and user['Birth_date']:
+                user['type'] = 'ADULT' if (datetime.now().date() - user['Birth_date']).days // 365 >= 18 else 'CHILD'
+                user['Email'] = email
+            else:
+                user = None
             cursor.close()
             conn.close()
         else:

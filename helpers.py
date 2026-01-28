@@ -239,7 +239,7 @@ def handle_crew_update(flight_number, request):
                 INSERT INTO Pilots_in_flight (Employee_id, Flight_number)
                 VALUES (%s, %s)
                 """,
-                (flight_number, pid)
+                (pid, flight_number)
             )
 
         # Insert new stewards
@@ -249,7 +249,7 @@ def handle_crew_update(flight_number, request):
                 INSERT INTO Stewards_in_flight (Employee_id, Flight_number)
                 VALUES (%s, %s)
                 """,
-                (flight_number, sid)
+                (sid, flight_number)
             )
 
         conn.commit()
