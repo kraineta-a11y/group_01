@@ -1793,6 +1793,35 @@ form .error-box {
   background: rgba(0,0,0,0.25);
 }
 
+/* ===== FIX: center the error banner and keep it card-width ===== */
+.error-box{
+  display: block;
+  width: min(720px, 92vw);     /* כמו הכרטיסים */
+  max-width: 92vw;
+  box-sizing: border-box;
+
+  margin: 16px auto;           /* מרכז */
+  padding: 14px 18px;
+
+  border: 2px solid rgba(255, 90, 90, 0.80);
+  border-radius: 18px;
+  background: rgba(255, 90, 90, 0.08);
+
+  color: rgba(255, 210, 210, .95);
+  font-weight: 800;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* אם השגיאה כן בתוך form/page-card – שתתיישר לרוחב הכרטיס */
+.page-card .error-box,
+form .error-box{
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 12px 0 !important;
+}
+
 
 
 
