@@ -8,7 +8,7 @@
 
   <main class="crew-wrap">
     <section class="crew-card">
-      <h2>Assign Crew to Flight {{ flight_number }}</h2>
+      <h2 class="crew-title">Assign Crew to Flight {{ flight_number }}</h2>
 
       <div class="crew-note">
         {% if long_haul_required %}
@@ -18,7 +18,7 @@
         {% endif %}
       </div>
 
-      <form method="post">
+      <form method="post" class="crew-form">
         <input type="hidden" name="flight_number" value="{{ flight_number }}">
 
         <h3>Pilots</h3>
@@ -37,20 +37,23 @@
           </label>
         {% endfor %}
 
-        <button type="submit" class="btn">Assign</button>
+        <div class="crew-actions">
+          <button type="submit" class="btn">Assign</button>
+        </div>
       </form>
 
-      <form method="POST" action="{{ url_for('assign_crew') }}" class="crew-danger-form">
+      <form method="POST" action="{{ url_for('assign_crew') }}" class="crew-actions">
         <input type="hidden" name="flight_number" value="{{ flight_number }}">
         <button type="submit" name="action" value="delete" class="btn danger">Delete Flight</button>
       </form>
 
       {% if error %}
-        <div class="error-box">
+        <div class="error-box crew-error">
           {{ error }}
         </div>
       {% endif %}
     </section>
   </main>
 </body>
+
 </html>
