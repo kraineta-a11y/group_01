@@ -1272,11 +1272,13 @@ def admin_create_flight():
         # ---------------------------------------------------------
         # We check if this plane is flying anytime between our Start and End
         time_query = """
-            SELECT 1 FROM Flight f
-            JOIN Flying_route fr ON f.Route_id = fr.Route_id
-            WHERE f.Plane_id = %s
-            AND TIMESTAMP(f.Departure_date, f.Departure_time) < %s
-            AND ADDTIME(TIMESTAMP(f.Departure_date, f.Departure_time), SEC_TO_TIME(fr.Duration * 60)) > %s
+SELECT 1 FROM Flight f
+JOIN Flying_route fr ON f.Route_id = fr.Route_id
+WHERE f.Plane_id = %s
+  AND f.Flight_status <> 'CANCELLED'
+  AND TIMESTAMP(f.Departure_date, f.Departure_time) < %s
+  AND ADDTIME(TIMESTAMP(f.Departure_date, f.Departure_time), SEC_TO_TIME(fr.Duration * 60)) > %s
+
         """
         cursor.execute(time_query, (plane_id, arr_dt, dep_dt))
         if cursor.fetchone():
