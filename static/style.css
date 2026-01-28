@@ -1821,6 +1821,14 @@ form .error-box{
   max-width: 100% !important;
   margin: 12px 0 !important;
 }
+
+.page-card p {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 16px 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 /* ===== Crew Assign Page Fix ===== */
 .crew-wrap{
   width: 100%;
