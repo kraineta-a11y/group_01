@@ -21,21 +21,27 @@
       <form method="post" class="crew-form">
         <input type="hidden" name="flight_number" value="{{ flight_number }}">
 
-        <h3>Pilots</h3>
-        {% for p in pilots %}
-          <label class="crew-item">
-            <input type="checkbox" name="pilots" value="{{ p.Employee_id }}">
-            <span>{{ p.Hebrew_first_name }} {{ p.Hebrew_last_name }}</span>
-          </label>
-        {% endfor %}
+<h3>Pilots</h3>
+<div class="crew-list">
+  {% for p in pilots %}
+    <label class="crew-item">
+      <input type="checkbox" name="pilots" value="{{ p.Employee_id }}">
+      <span>{{ p.Hebrew_first_name }} {{ p.Hebrew_last_name }}</span>
+    </label>
+  {% endfor %}
+</div>
 
-        <h3>Stewards</h3>
-        {% for s in stewards %}
-          <label class="crew-item">
-            <input type="checkbox" name="stewards" value="{{ s.Employee_id }}">
-            <span>{{ s.Hebrew_first_name }} {{ s.Hebrew_last_name }}</span>
-          </label>
-        {% endfor %}
+
+<h3>Stewards</h3>
+<div class="crew-list">
+  {% for s in stewards %}
+    <label class="crew-item">
+      <input type="checkbox" name="stewards" value="{{ s.Employee_id }}">
+      <span>{{ s.Hebrew_first_name }} {{ s.Hebrew_last_name }}</span>
+    </label>
+  {% endfor %}
+</div>
+
 
         <div class="crew-actions">
           <button type="submit" class="btn">Assign</button>
