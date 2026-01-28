@@ -1959,6 +1959,21 @@ form .error-box{
   background: rgba(255,255,255,.05) !important;
   box-sizing: border-box;
 }
+/* Make crew-list inset equally from BOTH sides */
+.crew-card .crew-list{
+  margin: 0 18px !important;     /* equal left + right gap */
+  padding: 0 !important;
+  width: auto !important;
+  box-sizing: border-box;
+}
+
+/* Keep each row full width INSIDE the list */
+.crew-card .crew-list .crew-item{
+  margin: 10px 0 !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
 
 
 
