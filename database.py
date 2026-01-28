@@ -68,29 +68,20 @@ def update_booking_status():
     conn.close()
 
 def get_available_planes(flight_number):
-    """Return planes not assigned to conflicting flights."""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Get flight details
-    query = """
+    cursor.execute("""
         SELECT f.*, fr.*
         FROM Flight f
         JOIN Flying_route fr ON f.Route_id = fr.Route_id
         WHERE f.Flight_number = %s
-    """
-    cursor.execute(query, (flight_number,))
+    """, (flight_number,))
     flight = cursor.fetchone()
-    # defining departure and arrival datetimes
-    dep_time_td = flight['Departure_time']   # timedelta
-    dep_time = (datetime.min + dep_time_td).time()
-    dep_dt = datetime.combine(
-        flight['Departure_date'],
-        dep_time
-    )
 
+    dep_time = (datetime.min + flight['Departure_time']).time()
+    dep_dt = datetime.combine(flight['Departure_date'], dep_time)
     arr_dt = dep_dt + timedelta(minutes=flight['Duration'])
-    # Check if long-haul
     long_haul = flight['Duration'] > 360
 
     query = """
@@ -100,21 +91,23 @@ def get_available_planes(flight_number):
             SELECT f2.Plane_id
             FROM Flight f2
             JOIN Flying_route fr2 ON f2.Route_id = fr2.Route_id
-            WHERE
-                TIMESTAMP(f2.Departure_date, f2.Departure_time) < %s
-            AND TIMESTAMP(f2.Departure_date, f2.Departure_time)
-                + INTERVAL fr2.Duration MINUTE > %s
+            WHERE f2.Flight_status <> 'CANCELLED'
+              AND TIMESTAMP(f2.Departure_date, f2.Departure_time) < %s
+              AND TIMESTAMP(f2.Departure_date, f2.Departure_time) + INTERVAL fr2.Duration MINUTE > %s
         )
     """
     params = [arr_dt, dep_dt]
+
     if long_haul:
-        query += "AND p.Size = 'LARGE'"
-    cursor.execute(query, (arr_dt, dep_dt))
+        query += "\nAND p.Size = 'LARGE'"
+
+    cursor.execute(query, params)
     results = cursor.fetchall()
 
     cursor.close()
     conn.close()
     return results
+
 
 # In get_available_staff:
 def get_available_staff(flight_number, employee_table, assignment_table, extra_conditions=""):
