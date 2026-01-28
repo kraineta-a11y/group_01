@@ -11,6 +11,7 @@
     <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
   </a>
 </div>
+<div class="page-card">
 <h2>Assign Crew to Flight {{ flight_number }}</h2>
 {% if long_haul_required %}
     <p>This is a long-haul flight. Please assign 3 pilots and 6 stewards.</p>
@@ -46,6 +47,7 @@
     {{ error }}
   </div>
 {% endif %}
+</div>
 </body>
     
 
