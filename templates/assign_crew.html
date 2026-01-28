@@ -1,49 +1,5 @@
 <!DOCTYPE html> <html> <head> <title>FLYTAU ADMIN</title> <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> </head>
 <body>
-<<<<<<< HEAD
-<div class="corner-logo">
-  <a href="{{ url_for('landing_page') }}">
-    <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
-  </a>
-</div>
-<div class="page-card">
-<h2>Assign Crew to Flight {{ flight_number }}</h2>
-{% if long_haul_required %}
-    <p>This is a long-haul flight. Please assign 3 pilots and 6 stewards.</p>
-{% else %}
-    <p>This is a short-haul flight. Please assign 2 pilots and 3 stewards.</p>
-{% endif %}
-<form method="post">
-    <input type="hidden" name="flight_number" value="{{ flight_number }}">
-  <h3>Pilots</h3>
-  {% for p in pilots %}
-    <label>
-      <input type="checkbox" name="pilots" value="{{ p.Employee_id }}">
-      {{ p.Hebrew_first_name }} {{ p.Hebrew_last_name }}
-    </label><br>
-  {% endfor %}
-
-  <h3>Stewards</h3>
-  {% for s in stewards %}
-    <label>
-      <input type="checkbox" name="stewards" value="{{ s.Employee_id }}">
-      {{ s.Hebrew_first_name }} {{ s.Hebrew_last_name }}
-    </label><br>
-  {% endfor %}
-
-  <button type="submit">Assign</button>
-</form>
-<form method="POST" action="{{ url_for('assign_crew') }}">
-  <input type="hidden" name="flight_number" value="{{ flight_number }}">
-  <button type="submit" name="action" value="delete">Delete Flight</button>
-</form>
-{% if error %}
-  <div class="error-box">
-    {{ error }}
-  </div>
-{% endif %}
-</div>
-=======
   <div class="corner-logo">
     <a href="{{ url_for('landing_page') }}">
       <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
@@ -104,7 +60,6 @@
       {% endif %}
     </section>
   </main>
->>>>>>> 454569bceebaa75048126d5632023e02cb9631c3
 </body>
 
 </html>
