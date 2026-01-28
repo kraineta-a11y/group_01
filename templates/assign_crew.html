@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>FLYTAU ADMIN</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-</head>
+<!DOCTYPE html> <html> <head> <title>FLYTAU ADMIN</title> <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> </head>
 <body>
+<<<<<<< HEAD
 <div class="corner-logo">
   <a href="{{ url_for('landing_page') }}">
     <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
@@ -48,7 +43,68 @@
   </div>
 {% endif %}
 </div>
+=======
+  <div class="corner-logo">
+    <a href="{{ url_for('landing_page') }}">
+      <img src="{{ url_for('static', filename='flytau_logo_circle.png') }}" alt="FLYTAU">
+    </a>
+  </div>
+
+  <main class="crew-wrap">
+    <section class="crew-card">
+      <h2 class="crew-title">Assign Crew to Flight {{ flight_number }}</h2>
+
+      <div class="crew-note">
+        {% if long_haul_required %}
+          This is a long-haul flight. Please assign 3 pilots and 6 stewards.
+        {% else %}
+          This is a short-haul flight. Please assign 2 pilots and 3 stewards.
+        {% endif %}
+      </div>
+
+      <form method="post" class="crew-form">
+        <input type="hidden" name="flight_number" value="{{ flight_number }}">
+
+<h3>Pilots</h3>
+<div class="crew-list">
+  {% for p in pilots %}
+    <label class="crew-item">
+      <input type="checkbox" name="pilots" value="{{ p.Employee_id }}">
+      <span>{{ p.Hebrew_first_name }} {{ p.Hebrew_last_name }}</span>
+    </label>
+  {% endfor %}
+</div>
+
+
+<h3>Stewards</h3>
+<div class="crew-list">
+  {% for s in stewards %}
+    <label class="crew-item">
+      <input type="checkbox" name="stewards" value="{{ s.Employee_id }}">
+      <span>{{ s.Hebrew_first_name }} {{ s.Hebrew_last_name }}</span>
+    </label>
+  {% endfor %}
+</div>
+
+
+        <div class="crew-actions">
+          <button type="submit" class="btn">Assign</button>
+        </div>
+      </form>
+
+      <form method="POST" action="{{ url_for('assign_crew') }}" class="crew-actions">
+        <input type="hidden" name="flight_number" value="{{ flight_number }}">
+        <button type="submit" name="action" value="delete" class="btn danger">Delete Flight</button>
+      </form>
+
+      {% if error %}
+        <div class="error-box crew-error">
+          {{ error }}
+        </div>
+      {% endif %}
+    </section>
+  </main>
+>>>>>>> 454569bceebaa75048126d5632023e02cb9631c3
 </body>
-    
 
 </html>

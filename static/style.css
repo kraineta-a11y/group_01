@@ -1821,6 +1821,162 @@ form .error-box{
   max-width: 100% !important;
   margin: 12px 0 !important;
 }
+/* ===== Crew Assign Page Fix ===== */
+.crew-wrap{
+  width: 100%;
+  max-width: var(--container);
+  margin: 110px auto 60px;
+  padding: 0 16px;
+}
+
+.crew-card{
+  width: 100%;
+  max-width: var(--narrow);
+  margin: 0 auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.crew-card h2{
+  margin: 0 0 14px;
+  text-align: center;
+}
+
+.crew-note{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 14px 0 20px;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.crew-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.crew-danger-form{
+  margin-top: 14px;
+}
+
+/* אם אין לך .btn/.danger כבר בפרויקט — זה ישב יפה גם בלי */
+.btn{
+  margin-top: 16px;
+}
+.btn.danger{
+  opacity: .95;
+}
+/* ===== Crew Assign Page: Alignment Fix ===== */
+.crew-wrap{
+  width: 100%;
+  max-width: var(--container);
+  margin: 110px auto 60px;
+  padding: 0 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.crew-card{
+  width: 100%;
+  max-width: var(--narrow);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px;
+  overflow: hidden;
+}
+
+/* חשוב: עוקף סטייל גלובלי שעושה לכותרות "בריחה" */
+.crew-card > h2.crew-title{
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  margin: 0 0 14px !important;
+  text-align: center !important;
+}
+
+.crew-note{
+  width: 100%;
+  margin: 12px 0 18px;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.crew-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 12px 14px;
+  border-radius: var(--radius2);
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+}
+
+.crew-actions{
+  margin-top: 18px;
+}
+
+.crew-card .btn{
+  width: 100%;
+}
+
+/* הודעת שגיאה נשארת בתוך הכרטיס */
+.crew-card .error-box.crew-error{
+  position: static !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 16px 0 0 !important;
+  box-sizing: border-box !important;
+}
+/* Show card background on BOTH sides of the crew rows */
+.crew-list{
+  margin: 0 !important;                 /* cancels the negative margins */
+  padding-inline: 18px;                 /* equal left/right inset (works with RTL too) */
+}
+
+.crew-item{
+  width: 100%;
+  margin: 10px 0;
+  border-radius: var(--radius2) !important;
+  border: 1px solid var(--line) !important;
+  background: rgba(255,255,255,.05) !important;
+  box-sizing: border-box;
+}
+/* Make crew-list inset equally from BOTH sides */
+.crew-card .crew-list{
+  margin: 0 18px !important;     /* equal left + right gap */
+  padding: 0 !important;
+  width: auto !important;
+  box-sizing: border-box;
+}
+
+/* Keep each row full width INSIDE the list */
+.crew-card .crew-list .crew-item{
+  margin: 10px 0 !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+
+
+
 
 
 
