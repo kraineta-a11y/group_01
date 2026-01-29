@@ -1,5 +1,5 @@
 import mysql.connector as mdb
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from decimal import Decimal
 
 def get_db_connection():
@@ -258,8 +258,6 @@ def get_available_staff(flight_number, employee_table, assignment_table, extra_c
 
     # Handle pending flight (not yet in database)
     if flight_number is None and pending_flight:
-        from datetime import datetime, timedelta, time
-        
         # Get flight details from pending_flight dict
         dep_date = datetime.fromisoformat(pending_flight['departure_date']).date()
         dep_time = time.fromisoformat(pending_flight['departure_time'])
