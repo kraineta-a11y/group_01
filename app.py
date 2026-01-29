@@ -1255,6 +1255,11 @@ def admin_create_flight():
         dep_date_obj = datetime.strptime(request.form['departure_date'], "%Y-%m-%d").date()
         dep_time_raw = request.form['departure_time']
         
+        # Check if departure date is in the past
+        if dep_date_obj < datetime.now().date():
+            cursor.close(); conn.close()
+            return render_template('create_flight.html', origins=origins, destinations=destinations, planes=planes, error="Cannot create flights in the past.")
+        
         # Normalize time input
         if isinstance(dep_time_raw, str):
             dep_time_obj = datetime.strptime(dep_time_raw, "%H:%M").time()
