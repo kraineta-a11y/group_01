@@ -1294,6 +1294,7 @@ WHERE f.Plane_id = %s
             FROM Flight f
             JOIN Flying_route fr ON f.Route_id = fr.Route_id
             WHERE f.Plane_id = %s
+            AND f.Flight_status <> 'CANCELLED'
             AND TIMESTAMP(f.Departure_date, f.Departure_time) < %s
             ORDER BY TIMESTAMP(f.Departure_date, f.Departure_time) DESC
             LIMIT 1
@@ -1310,61 +1311,23 @@ WHERE f.Plane_id = %s
                 return render_template('create_flight.html', origins=origins, destinations=destinations, planes=planes, error=error_msg)
 
         # ---------------------------------------------------------
-        # INSERT FLIGHT
+        # STORE FLIGHT DATA IN SESSION (don't insert yet)
         # ---------------------------------------------------------
-        cursor.execute("SELECT MAX(Flight_number) AS max_num FROM Flight")
-        res = cursor.fetchone()
-        flight_number = (res['max_num'] or 0) + 1
-
-        cursor.execute("""
-            INSERT INTO Flight (Flight_number, Plane_id, Route_id, Departure_date, Departure_time, Flight_status, Employee_id)
-            VALUES (%s, %s, %s, %s, %s, 'ACTIVE', %s)
-        """, (flight_number, plane_id, route_id, dep_date_obj, dep_time_obj, manager_id))
-
-        # Insert Pricing (Economy)
-        cursor.execute("""
-            INSERT INTO Flight_pricing (Flight_number, Plane_id, Price, Employee_id, Class_type)
-            VALUES (%s, %s, %s, %s, 'ECONOMY')
-        """, (flight_number, plane_id, price, manager_id))
-
-        # Insert Pricing (Business - Optional)
-        if plane_size == 'LARGE':
-            cursor.execute("""
-                INSERT INTO Flight_pricing (Flight_number, Plane_id, Price, Employee_id, Class_type)
-                VALUES (%s, %s, %s, %s, 'BUSINESS')
-            """, (flight_number, plane_id, float(price) * 1.5, manager_id))
-
-        # ---------------------------------------------------------
-        # GENERATE SEATS
-        # ---------------------------------------------------------
-        # Helper function to generate seats to avoid duplicate code
-        def generate_seats(class_type):
-            cursor.execute("""
-                SELECT first_row, last_row, first_col, last_col
-                FROM Class WHERE Plane_id = %s AND Class_type = %s
-            """, (plane_id, class_type))
-            seat_conf = cursor.fetchone()
-            
-            if seat_conf:
-                seats_data = []
-                for r in range(seat_conf['first_row'], seat_conf['last_row'] + 1):
-                    for c_ord in range(ord(seat_conf['first_col']), ord(seat_conf['last_col']) + 1):
-                        seats_data.append((flight_number, plane_id, r, chr(c_ord), 1))
-                
-                if seats_data:
-                    cursor.executemany("""
-                        INSERT INTO Seats_in_flight (Flight_number, Plane_id, Row_num, Col_num, Availability)
-                        VALUES (%s, %s, %s, %s, %s)
-                    """, seats_data)
-
-        generate_seats('ECONOMY')
-        if plane_size == 'LARGE':
-            generate_seats('BUSINESS')
-
-        conn.commit()
+        session['pending_flight'] = {
+            'plane_id': plane_id,
+            'route_id': route_id,
+            'departure_date': dep_date_obj.isoformat(),
+            'departure_time': dep_time_obj.isoformat(),
+            'price': float(price),
+            'plane_size': plane_size,
+            'manager_id': manager_id,
+            'origin': origin,
+            'destination': destination,
+            'duration': dur
+        }
         cursor.close()
         conn.close()
-        return redirect(url_for('assign_crew', flight_number=flight_number))
+        return redirect(url_for('assign_crew'))
 
     cursor.close()
     conn.close()
@@ -1375,100 +1338,171 @@ WHERE f.Plane_id = %s
 def assign_crew():
     error = None
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
     if get_user_role(session) != 'manager':
         abort(403, description="Forbidden")
 
+    # Check if we have pending flight data
+    pending_flight = session.get('pending_flight')
+    
     if request.method == 'POST':
         action = request.form.get('action')
-        flight_number = request.form.get('flight_number')
         
-        # --------- DELETE FLOW ----------
-        if action == 'delete':
-            cursor.execute("DELETE FROM Seats_in_flight WHERE Flight_number=%s", (flight_number,))
-            cursor.execute("DELETE FROM Flight_pricing WHERE Flight_number=%s", (flight_number,))
-            cursor.execute("DELETE FROM Pilots_in_flight WHERE Flight_number=%s", (flight_number,))
-            cursor.execute("DELETE FROM Stewards_in_flight WHERE Flight_number=%s", (flight_number,))
-            cursor.execute("DELETE FROM Flight WHERE Flight_number=%s", (flight_number,))
-            conn.commit()
-            cursor.close()
-            conn.close()
+        # --------- CANCEL FLOW ----------
+        if action == 'cancel':
+            session.pop('pending_flight', None)
             return redirect(url_for('admin_dashboard'))
         
-        # ---------- ASSIGN CREW FLOW ----------
-        flight_number = request.form.get('flight_number')
-        pilots = request.form.getlist('pilots')
-        stewards = request.form.getlist('stewards')
-
-        long_haul_required = is_long_haul_flight(flight_number)
-
-
-        # checking long haul requirements are met
-        if long_haul_required:
-            if len(pilots) != 3 or len(stewards) != 6:
+        # ---------- CONFIRM CREW ASSIGNMENT FLOW ----------
+        if action == 'confirm' and pending_flight:
+            pilots = request.form.getlist('pilots')
+            stewards = request.form.getlist('stewards')
+            
+            # Determine if long-haul based on duration
+            is_long_haul = pending_flight['duration'] > 360
+            
+            # Validate crew count
+            if is_long_haul:
+                if len(pilots) != 3 or len(stewards) != 6:
+                    error = "Invalid crew assignment for long-haul flight."
+                    available_pilots = get_available_pilots(None, is_long_haul, pending_flight)
+                    available_stewards = get_available_stewards(None, is_long_haul, pending_flight)
+                    return render_template(
+                        'assign_crew.html',
+                        pending_flight=pending_flight,
+                        pilots=available_pilots,
+                        stewards=available_stewards,
+                        long_haul_required=is_long_haul,
+                        error=error
+                    )
+            else:
+                if len(pilots) != 2 or len(stewards) != 3:
+                    error = "Invalid crew assignment for short-haul flight."
+                    available_pilots = get_available_pilots(None, is_long_haul, pending_flight)
+                    available_stewards = get_available_stewards(None, is_long_haul, pending_flight)
+                    return render_template(
+                        'assign_crew.html',
+                        pending_flight=pending_flight,
+                        pilots=available_pilots,
+                        stewards=available_stewards,
+                        long_haul_required=is_long_haul,
+                        error=error
+                    )
+            
+            # NOW insert everything to database
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            try:
+                # Get next flight number
+                cursor.execute("SELECT MAX(Flight_number) AS max_num FROM Flight")
+                res = cursor.fetchone()
+                flight_number = (res['max_num'] or 0) + 1
+                
+                # Parse dates/times from session
+                dep_date = datetime.fromisoformat(pending_flight['departure_date']).date()
+                dep_time = datetime.fromisoformat(pending_flight['departure_time']).time()
+                
+                # Insert Flight
+                cursor.execute("""
+                    INSERT INTO Flight (Flight_number, Plane_id, Route_id, Departure_date, Departure_time, Flight_status, Employee_id)
+                    VALUES (%s, %s, %s, %s, %s, 'ACTIVE', %s)
+                """, (flight_number, pending_flight['plane_id'], pending_flight['route_id'], dep_date, dep_time, pending_flight['manager_id']))
+                
+                # Insert Pricing (Economy)
+                cursor.execute("""
+                    INSERT INTO Flight_pricing (Flight_number, Plane_id, Price, Employee_id, Class_type)
+                    VALUES (%s, %s, %s, %s, 'ECONOMY')
+                """, (flight_number, pending_flight['plane_id'], pending_flight['price'], pending_flight['manager_id']))
+                
+                # Insert Pricing (Business - Optional)
+                if pending_flight['plane_size'] == 'LARGE':
+                    cursor.execute("""
+                        INSERT INTO Flight_pricing (Flight_number, Plane_id, Price, Employee_id, Class_type)
+                        VALUES (%s, %s, %s, %s, 'BUSINESS')
+                    """, (flight_number, pending_flight['plane_id'], pending_flight['price'] * 1.5, pending_flight['manager_id']))
+                
+                # Generate seats
+                def generate_seats(class_type):
+                    cursor.execute("""
+                        SELECT first_row, last_row, first_col, last_col
+                        FROM Class WHERE Plane_id = %s AND Class_type = %s
+                    """, (pending_flight['plane_id'], class_type))
+                    seat_conf = cursor.fetchone()
+                    
+                    if seat_conf:
+                        seats_data = []
+                        for r in range(seat_conf['first_row'], seat_conf['last_row'] + 1):
+                            for c_ord in range(ord(seat_conf['first_col']), ord(seat_conf['last_col']) + 1):
+                                seats_data.append((flight_number, pending_flight['plane_id'], r, chr(c_ord), 1))
+                        
+                        if seats_data:
+                            cursor.executemany("""
+                                INSERT INTO Seats_in_flight (Flight_number, Plane_id, Row_num, Col_num, Availability)
+                                VALUES (%s, %s, %s, %s, %s)
+                            """, seats_data)
+                
+                generate_seats('ECONOMY')
+                if pending_flight['plane_size'] == 'LARGE':
+                    generate_seats('BUSINESS')
+                
+                # Assign crew
+                for pilot_id in pilots:
+                    cursor.execute("""
+                        INSERT INTO Pilots_in_flight (Employee_id, Flight_number)
+                        VALUES (%s, %s)
+                    """, (pilot_id, flight_number))
+                
+                for steward_id in stewards:
+                    cursor.execute("""
+                        INSERT INTO Stewards_in_flight (Employee_id, Flight_number)
+                        VALUES (%s, %s)
+                    """, (steward_id, flight_number))
+                
+                conn.commit()
+                session.pop('pending_flight', None)
                 cursor.close()
                 conn.close()
-                error = "Invalid crew assignment for long-haul flight."
+                return redirect(url_for('admin_dashboard'))
+            
+            except Exception as e:
+                conn.rollback()
+                cursor.close()
+                conn.close()
+                error = f"Error creating flight: {str(e)}"
+                available_pilots = get_available_pilots(None, is_long_haul, pending_flight)
+                available_stewards = get_available_stewards(None, is_long_haul, pending_flight)
                 return render_template(
                     'assign_crew.html',
-                    flight_number=flight_number,
-                    pilots=get_available_pilots(flight_number, long_haul_required),
-                    stewards=get_available_stewards(flight_number, long_haul_required),
-                    long_haul_required=long_haul_required,
+                    pending_flight=pending_flight,
+                    pilots=available_pilots,
+                    stewards=available_stewards,
+                    long_haul_required=is_long_haul,
                     error=error
                 )
+    
+    # GET — show crew selection page
+    if pending_flight:
+        is_long_haul = pending_flight['duration'] > 360
+        available_pilots = get_available_pilots(None, is_long_haul, pending_flight)
+        available_stewards = get_available_stewards(None, is_long_haul, pending_flight)
+        
+        if is_long_haul:
+            if len(available_pilots) < 3 or len(available_stewards) < 6:
+                error = "Not enough available crew members found for this flight."
         else:
-            if len(pilots) != 2 or len(stewards) != 3:
-                cursor.close()
-                conn.close()
-                error = "Invalid crew assignment for short-haul flight."
-                return render_template(
-                    'assign_crew.html',
-                    flight_number=flight_number,
-                    pilots=get_available_pilots(flight_number, long_haul_required),
-                    stewards=get_available_stewards(flight_number, long_haul_required),
-                    long_haul_required=long_haul_required,
-                    error=error
-                )
-
-        for pilot_id in pilots:
-            cursor.execute("""
-                INSERT INTO Pilots_in_flight (Employee_id, Flight_number)
-                VALUES (%s, %s)
-            """, (pilot_id, flight_number))
-
-        for steward_id in stewards:
-            cursor.execute("""
-                INSERT INTO Stewards_in_flight (Employee_id, Flight_number)
-                VALUES (%s, %s)
-            """, (steward_id, flight_number))
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return redirect(url_for('admin_dashboard'))
-
-    # GET — show available staff
-    flight_number = request.args.get('flight_number')
-    long_haul_required = is_long_haul_flight(flight_number)
-    available_pilots = get_available_pilots(flight_number, long_haul_required)
-    available_stewards = get_available_stewards(flight_number, long_haul_required)
-    if long_haul_required:
-        if len(available_pilots) < 3 or len(available_stewards) < 6:
-            error = "Not enough available crew members found for this flight."
+            if len(available_pilots) < 2 or len(available_stewards) < 3:
+                error = "Not enough available crew members found for this flight."
+        
+        return render_template(
+            'assign_crew.html',
+            pending_flight=pending_flight,
+            pilots=available_pilots,
+            stewards=available_stewards,
+            long_haul_required=is_long_haul,
+            error=error
+        )
     else:
-        if len(available_pilots) < 2 or len(available_stewards) < 3:
-            error = "Not enough available crew members found for this flight."
-    return render_template(
-        'assign_crew.html',
-        flight_number=flight_number,
-        pilots=available_pilots,
-        stewards=available_stewards,
-        long_haul_required=long_haul_required,
-        error=error
-    )
+        return redirect(url_for('admin_dashboard'))
 
 @handle_errors
 @application.route("/")

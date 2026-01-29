@@ -177,31 +177,56 @@ def get_available_planes(flight_number):
 
 
 # In get_available_staff:
-def get_available_staff(flight_number, employee_table, assignment_table, extra_conditions=""):
-    """Return staff members not assigned to conflicting flights and located at the origin."""
+def get_available_staff(flight_number, employee_table, assignment_table, extra_conditions="", pending_flight=None):
+    """Return staff members not assigned to conflicting flights and located at the origin.
+    
+    Args:
+        flight_number: Flight ID (None if using pending_flight)
+        employee_table: 'Pilot' or 'Steward'
+        assignment_table: 'Pilots_in_flight' or 'Stewards_in_flight'
+        extra_conditions: Additional WHERE conditions (e.g., long haul qualification)
+        pending_flight: Dict with pending flight data (duration, origin, etc.) if flight not yet in DB
+    """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Get flight details
-    query = """
-        SELECT f.*, fr.*
-        FROM Flight f
-        JOIN Flying_route fr ON f.Route_id = fr.Route_id
-        WHERE f.Flight_number = %s
-    """
-    cursor.execute(query, (flight_number,))
-    flight = cursor.fetchone()
-    # defining departure and arrival datetimes
-    dep_time_td = flight['Departure_time']   # timedelta
-    dep_time = (datetime.min + dep_time_td).time()
+    # Handle pending flight (not yet in database)
+    if flight_number is None and pending_flight:
+        from datetime import datetime, timedelta
+        
+        # Get flight details from pending_flight dict
+        dep_date = datetime.fromisoformat(pending_flight['departure_date']).date()
+        dep_time = datetime.fromisoformat(pending_flight['departure_time']).time()
+        dep_dt = datetime.combine(dep_date, dep_time)
+        arr_dt = dep_dt + timedelta(minutes=pending_flight['duration'])
+        origin = pending_flight['origin']
+    else:
+        # Get flight details from database
+        query = """
+            SELECT f.*, fr.*
+            FROM Flight f
+            JOIN Flying_route fr ON f.Route_id = fr.Route_id
+            WHERE f.Flight_number = %s
+        """
+        cursor.execute(query, (flight_number,))
+        flight = cursor.fetchone()
+        
+        if not flight:
+            cursor.close()
+            conn.close()
+            return []
+        
+        # defining departure and arrival datetimes
+        dep_time_td = flight['Departure_time']   # timedelta
+        dep_time = (datetime.min + dep_time_td).time()
 
-    dep_dt = datetime.combine(
-        flight['Departure_date'],
-        dep_time
-    )
+        dep_dt = datetime.combine(
+            flight['Departure_date'],
+            dep_time
+        )
 
-    arr_dt = dep_dt + timedelta(minutes=flight['Duration'])
-    origin = flight['Origin_airport']
+        arr_dt = dep_dt + timedelta(minutes=flight['Duration'])
+        origin = flight['Origin_airport']
 
     query = f"""
         SELECT e.Employee_id,
@@ -249,7 +274,7 @@ def get_available_staff(flight_number, employee_table, assignment_table, extra_c
     conn.close()
     return result
 
-def get_available_pilots(flight_number, long_haul_required):
+def get_available_pilots(flight_number, long_haul_required, pending_flight=None):
     condition = ""
     if long_haul_required:
         condition = "AND e.Long_haul_qualified = TRUE"
@@ -258,10 +283,11 @@ def get_available_pilots(flight_number, long_haul_required):
         flight_number,
         employee_table="Pilot",
         assignment_table="Pilots_in_flight",
-        extra_conditions=condition
+        extra_conditions=condition,
+        pending_flight=pending_flight
     )
 
-def get_available_stewards(flight_number, long_haul_required):
+def get_available_stewards(flight_number, long_haul_required, pending_flight=None):
     condition = ""
     if long_haul_required:
         condition = "AND e.Long_haul_qualified = TRUE"
@@ -269,7 +295,8 @@ def get_available_stewards(flight_number, long_haul_required):
         flight_number,
         employee_table="Steward",
         assignment_table="Stewards_in_flight", 
-        extra_conditions=condition
+        extra_conditions=condition,
+        pending_flight=pending_flight
     )
 
 def is_long_haul_flight(flight_number):
