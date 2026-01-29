@@ -192,11 +192,11 @@ def get_available_staff(flight_number, employee_table, assignment_table, extra_c
 
     # Handle pending flight (not yet in database)
     if flight_number is None and pending_flight:
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, time
         
         # Get flight details from pending_flight dict
         dep_date = datetime.fromisoformat(pending_flight['departure_date']).date()
-        dep_time = datetime.fromisoformat(pending_flight['departure_time']).time()
+        dep_time = time.fromisoformat(pending_flight['departure_time'])
         dep_dt = datetime.combine(dep_date, dep_time)
         arr_dt = dep_dt + timedelta(minutes=pending_flight['duration'])
         origin = pending_flight['origin']
