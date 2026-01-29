@@ -33,8 +33,74 @@ def get_user_role(session):
 def update_flight_status():
     # runs periodically to update flight status based on current time
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
+    # First, auto-cancel ACTIVE flights that are past departure time but lack required crew
+    cursor.execute("""
+        SELECT f.Flight_number, f.Plane_id, fr.Duration
+        FROM Flight f
+        JOIN Flying_route fr ON f.Route_id = fr.Route_id
+        WHERE f.Flight_status = 'ACTIVE'
+        AND TIMESTAMP(f.Departure_date, f.Departure_time) < NOW()
+    """)
+    
+    past_flights = cursor.fetchall()
+    
+    for flight in past_flights:
+        flight_number = flight['Flight_number']
+        plane_id = flight['Plane_id']
+        duration = flight['Duration']
+        is_long_haul = duration > 360
+        
+        # Check crew assignments
+        required_pilots = 3 if is_long_haul else 2
+        required_stewards = 6 if is_long_haul else 3
+        
+        cursor.execute("""
+            SELECT COUNT(DISTINCT Employee_id) as pilot_count
+            FROM Pilots_in_flight
+            WHERE Flight_number = %s
+        """, (flight_number,))
+        pilot_result = cursor.fetchone()
+        pilot_count = pilot_result['pilot_count'] if pilot_result else 0
+        
+        cursor.execute("""
+            SELECT COUNT(DISTINCT Employee_id) as steward_count
+            FROM Stewards_in_flight
+            WHERE Flight_number = %s
+        """, (flight_number,))
+        steward_result = cursor.fetchone()
+        steward_count = steward_result['steward_count'] if steward_result else 0
+        
+        # If crew is incomplete, auto-cancel the flight
+        if pilot_count < required_pilots or steward_count < required_stewards:
+            # Cancel active bookings (system cancellation, not customer)
+            cursor.execute("""
+                UPDATE Booking
+                SET Booking_status = 'SYSTEM_CANCELLED'
+                WHERE Flight_number = %s
+                AND Booking_status = 'ACTIVE'
+            """, (flight_number,))
+            
+            # Remove crew assignments
+            cursor.execute("DELETE FROM Pilots_in_flight WHERE Flight_number = %s", (flight_number,))
+            cursor.execute("DELETE FROM Stewards_in_flight WHERE Flight_number = %s", (flight_number,))
+            
+            # Zero out pricing
+            cursor.execute("""
+                UPDATE Flight_pricing
+                SET Price = 0
+                WHERE Flight_number = %s
+            """, (flight_number,))
+            
+            # Mark flight as cancelled
+            cursor.execute("""
+                UPDATE Flight
+                SET Flight_status = 'CANCELLED'
+                WHERE Flight_number = %s
+            """, (flight_number,))
+    
+    # Then, update flights that have landed (past their arrival time)
     cursor.execute("""
         UPDATE Flight f
         JOIN Flying_route fr ON f.Route_id = fr.Route_id
