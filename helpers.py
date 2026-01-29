@@ -189,7 +189,7 @@ def handle_flight_update(flight_number, request, session):
     return redirect(url_for('edit_flight', flight_number=flight_number))
 
 def handle_crew_update(flight_number, request):
-    from database import get_db_connection, is_long_haul_flight, build_edit_flight_context
+    from database import get_db_connection, is_long_haul_flight, build_edit_flight_context, get_available_pilots, get_available_stewards
     from flask import render_template, redirect, url_for
     from werkzeug.exceptions import abort
     pilot_ids = request.form.getlist('pilots')
@@ -215,6 +215,32 @@ def handle_crew_update(flight_number, request):
             context = build_edit_flight_context(
                 flight_number,
                 error="Short-haul flights require exactly 2 pilots and 3 stewards."
+            )
+            return render_template('edit_flight.html', **context)
+
+    # Validate crew availability
+    available_pilots = get_available_pilots(flight_number, long_haul_required)
+    available_stewards = get_available_stewards(flight_number, long_haul_required)
+    
+    # Extract available IDs
+    available_pilot_ids = {str(p['Employee_id']) for p in available_pilots}
+    available_steward_ids = {str(s['Employee_id']) for s in available_stewards}
+    
+    # Validate that all selected pilots are available
+    for pid in pilot_ids:
+        if pid not in available_pilot_ids:
+            context = build_edit_flight_context(
+                flight_number,
+                error=f"Pilot {pid} is not available for this flight (time conflict or location mismatch)."
+            )
+            return render_template('edit_flight.html', **context)
+    
+    # Validate that all selected stewards are available
+    for sid in steward_ids:
+        if sid not in available_steward_ids:
+            context = build_edit_flight_context(
+                flight_number,
+                error=f"Steward {sid} is not available for this flight (time conflict or location mismatch)."
             )
             return render_template('edit_flight.html', **context)
 
